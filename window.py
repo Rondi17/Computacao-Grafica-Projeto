@@ -63,6 +63,16 @@ class MainWindow(QMainWindow):
         #botao1.setStyleSheet('QPushButton {background-color:#0FB328;font:bold; font-size:20px}')
         botao1.clicked.connect(self.get_object_information)
 
+        botaoZoomIn = QPushButton("Zoom in", self)
+        botaoZoomIn.move(100, 235)
+        botaoZoomIn.resize(90, 30)
+        botaoZoomIn.clicked.connect(self.zoom_in)
+
+        botaoZoomOut = QPushButton("Zoom out", self)
+        botaoZoomOut.move(100, 270)
+        botaoZoomOut.resize(90, 30)
+        botaoZoomOut.clicked.connect(self.zoom_out)
+
     def create_viewport(self):
         self.scene = QGraphicsScene()
         self.view = QGraphicsView(self.scene, self)
