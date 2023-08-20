@@ -1,4 +1,5 @@
-from PyQt5.QtWidgets import QGraphicsLineItem
+from PyQt5.QtWidgets import QGraphicsLineItem, QGraphicsEllipseItem
+from PyQt5.QtCore import Qt
 
 #obs: colocar tipo
 class GraphicsItem:
@@ -6,7 +7,12 @@ class GraphicsItem:
         self.x = x
         self.y = y
 
-class Line(QGraphicsLineItem):
-    def __init__(self, x1, y1, x2, y2):
-        super().__init__(x1, y1, x2, y2)
+class Ponto(QGraphicsEllipseItem):
+    def __init__(self, x, y):
+        super().__init__(x, y, 10, 10)
+        self.setBrush(Qt.black)
+
+class Reta(QGraphicsLineItem):
+    def __init__(self, x1, y1):
+        super().__init__(x1, y1, 700, 250)
         
