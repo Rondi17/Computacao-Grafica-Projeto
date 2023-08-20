@@ -55,6 +55,22 @@ class DialogBox(QDialog):
             self.y2_input = QLineEdit()
             self.fields_layout.addWidget(self.x2_input)
             self.fields_layout.addWidget(self.y2_input)
+        elif option == "Wireframe":
+            self.cnt = 1
+            self.listX = []
+            self.listY = []
+            while True:
+                self.fields_layout.addWidget(QLabel(f"Ponto {self.cnt}(x{self.cnt}, y{self.cnt}):"))
+                x = QLineEdit()
+                y = QLineEdit()
+                self.fields_layout.addWidget(x)
+                self.fields_layout.addWidget(y)
+                self.listX.append(x)
+                self.listY.append(y)
+                self.cnt+= 1
+                if self.cnt >=5:
+                    break
+
 
     def clear_fields(self):
         for i in reversed(range(self.fields_layout.count())):
@@ -79,6 +95,9 @@ class DialogBox(QDialog):
                 "y2": int(self.y2_input.text())
             }
         else:
-            return {
-                "opcao": option
-            }
+            dic = dict()
+            dic["opcao"] =  option
+            for i in range(self.cnt-1):
+                dic[f'x{i}'] =  int(self.listX[i].text())
+                dic[f'y{i}'] =  int(self.listY[i].text())
+            return dic

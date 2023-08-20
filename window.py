@@ -7,13 +7,6 @@ from PyQt5.QtGui import *
 from graphicsitem import Ponto, Reta
 from window2 import DialogBox
 
-class Resize(QWidget):
-    def paintEvent(self, event):
-        QP= QtGui.QPainter(self)
-        pen = QtGui.QPen(QtGui.QColor(QtCore.Qt.black), 5)
-        QP.setPen(pen)
-        QP.drawRect()
-
 
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -118,7 +111,14 @@ class MainWindow(QMainWindow):
             self.draw_display_file(new_object)
             self.scene.addItem(new_object)
         else:
-            print("outra coisa")
+            tam = (len(info.items()) // 2)
+            for i in range(int(tam - 1)):
+                new_object = Reta(info[f'x{i}'], info[f'y{i}'], info[f'x{i+1}'], info[f'y{i+1}'])
+                self.draw_display_file(new_object)
+                self.scene.addItem(new_object)
+            new_object = Reta(info[f'x{0}'], info[f'y{0}'], info[f'x{tam-1}'], info[f'y{tam-1}'])
+            self.draw_display_file(new_object)
+            self.scene.addItem(new_object)
 
     def draw_objects(self):
         for object in self.display_file:
