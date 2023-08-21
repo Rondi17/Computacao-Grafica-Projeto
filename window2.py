@@ -56,6 +56,9 @@ class DialogBox(QDialog):
             self.fields_layout.addWidget(self.x2_input)
             self.fields_layout.addWidget(self.y2_input)
         elif option == "Wireframe":
+            self.fields_layout.addWidget(QLabel("Selecione o número de lados do poligono:"))
+            self.nLados = QLineEdit()
+            self.fields_layout.addWidget(self.nLados)
             self.cnt = 1
             self.listX = []
             self.listY = []
@@ -68,7 +71,7 @@ class DialogBox(QDialog):
                 self.listX.append(x)
                 self.listY.append(y)
                 self.cnt+= 1
-                if self.cnt >=5:
+                if self.cnt >= 5:
                     break
 
 

@@ -1,7 +1,7 @@
 import PyQt5.QtWidgets as qtw
 from PyQt5 import QtGui, QtCore, QtWidgets
 from PyQt5.QtWidgets import QMainWindow, QPushButton, QGraphicsView, QGraphicsScene, QGraphicsEllipseItem
-from PyQt5.QtCore import Qt, QSize, QPoint
+from PyQt5.QtCore import Qt, QSize, QPoint, QObject, QPointF
 from PyQt5.QtWidgets import *
 from PyQt5.QtGui import *
 from graphicsitem import Ponto, Reta
@@ -15,8 +15,8 @@ class MainWindow(QMainWindow):
         self.display_file = []
         #self.setGeometry(100, 100, 800, 600)
         self.title = "Sistema Gráfico Interativo 2D"
-        self.left = 0
-        self.top = 0
+        self.left = 100
+        self.top = 100
         self.width = 800
         self.height = 600
         self.initUI()
@@ -66,6 +66,28 @@ class MainWindow(QMainWindow):
         botaoZoomOut.resize(90, 30)
         botaoZoomOut.clicked.connect(self.zoom_out)
 
+        botaoLeft = QPushButton("Left", self)
+        botaoLeft.move(10, 380)
+        botaoLeft.resize(70, 30)
+        botaoLeft.clicked.connect(self.pan_Left)
+
+        botaoRight = QPushButton("Rigth", self)
+        botaoRight.move(80, 380)
+        botaoRight.resize(70, 30)
+        botaoRight.clicked.connect(self.pan_Rigth)
+
+        botaoUp = QPushButton("Up", self)
+        botaoUp.move(45, 350)
+        botaoUp.resize(70, 30)
+        botaoUp.clicked.connect(self.pan_Up)
+
+        botaoDown = QPushButton("Down", self)
+        botaoDown.move(45, 410)
+        botaoDown.resize(70, 30)
+        botaoDown.clicked.connect(self.pan_Down)
+
+
+
     def create_viewport(self):
         self.scene = QGraphicsScene()
         self.view = QGraphicsView(self.scene, self)
@@ -84,6 +106,43 @@ class MainWindow(QMainWindow):
             context=QtCore.Qt.WidgetShortcut,
             activated=self.zoom_out,
         )
+
+        #Left_shortcut
+        QtWidgets.QShortcut(
+            QtGui.QKeySequence(QtGui.QKeySequence.MoveToPreviousChar),
+            self.view,
+            context=QtCore.Qt.WidgetShortcut,
+            activated=self.pan_Left,
+        )
+
+        #Right_shortcut
+        QtWidgets.QShortcut(
+            QtGui.QKeySequence(QtGui.QKeySequence.MoveToNextChar),
+            self.view,
+            context=QtCore.Qt.WidgetShortcut,
+            activated=self.pan_Rigth,
+        )
+
+        #Up_shortcut
+        QtWidgets.QShortcut(
+            QtGui.QKeySequence(QtGui.QKeySequence.MoveToPreviousLine),
+            self.view,
+            context=QtCore.Qt.WidgetShortcut,
+            activated=self.pan_Up,
+        )
+
+        #Down_shortcut
+        QtWidgets.QShortcut(
+            QtGui.QKeySequence(QtGui.QKeySequence.MoveToNextLine),
+            self.view,
+            context=QtCore.Qt.WidgetShortcut,
+            activated=self.pan_Down,
+        )
+
+        #Set noAnchor to GraphicsView, enabling the view to move
+        self.view.setTransformationAnchor(QGraphicsView.ViewportAnchor(0))
+        
+
 
     #tela para criar um novo objeto
     def get_object_information(self):
@@ -122,7 +181,8 @@ class MainWindow(QMainWindow):
 
     def draw_objects(self):
         for object in self.display_file:
-            self.scene.addItem(object)
+            #self.view.mapToScene(0, 0)
+            pass
 
 
     @QtCore.pyqtSlot()
@@ -143,3 +203,31 @@ class MainWindow(QMainWindow):
         if invertible:
             tr = self.view.transform() * scale_inverted
             self.view.setTransform(tr)
+
+    @QtCore.pyqtSlot()
+    def pan_Left(self):
+        self.view.translate(20.0, 0)
+        self.view.update()
+
+    @QtCore.pyqtSlot()
+    def pan_Rigth(self):
+        self.view.translate(-20.0, 0)
+        self.view.update()
+
+    @QtCore.pyqtSlot()
+    def pan_Up(self):
+        self.view.translate(0, 20.0)
+        self.view.update()
+
+    @QtCore.pyqtSlot()
+    def pan_Down(self):
+        self.view.translate(0, -20.0)
+        self.view.update()
+
+'''class PanGestureRecognizer(QGestureRecognizer):
+    startPoint = QPointF()
+    panning = False
+
+    gesture = QGesture(QObject())
+    
+    def '''
