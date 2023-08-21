@@ -1,4 +1,4 @@
-from PyQt5.QtWidgets import QGraphicsLineItem, QGraphicsEllipseItem
+from PyQt5.QtWidgets import QGraphicsLineItem, QGraphicsEllipseItem, QGraphicsPolygonItem, QGraphicsItem
 from PyQt5.QtCore import Qt, QPoint
 
 #obs: colocar tipo
@@ -18,5 +18,5 @@ class Reta(QGraphicsLineItem):
         super().__init__(x1, y1, x2, y2)
         self.name = "Reta"
 
-        
+
         
