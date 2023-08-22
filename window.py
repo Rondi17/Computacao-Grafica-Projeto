@@ -4,7 +4,7 @@ from PyQt5.QtWidgets import QMainWindow, QPushButton, QGraphicsView, QGraphicsSc
 from PyQt5.QtCore import Qt, QSize, QPoint, QObject, QPointF
 from PyQt5.QtWidgets import *
 from PyQt5.QtGui import *
-from graphicsitem import Ponto, Reta
+from graphicsitem import Ponto, Reta, Wireframe
 from window2 import DialogBox
 
 
@@ -40,16 +40,10 @@ class MainWindow(QMainWindow):
         self.objects_widget.show()
 
     def draw_display_file(self, object):
-        if object == 'Wireframe':
-            objeto = QListWidgetItem(self.objects_widget)
-            objeto.setText('Wireframe')
-            self.objects_widget.addItem(objeto)
-            self.objects_widget.update()
-        else:
-            objeto = QListWidgetItem(self.objects_widget)
-            objeto.setText(object.name)
-            self.objects_widget.addItem(objeto)
-            self.objects_widget.update()
+        objeto = QListWidgetItem(self.objects_widget)
+        objeto.setText(object.name)
+        self.objects_widget.addItem(objeto)
+        self.objects_widget.update()
         #cria a viewport  e desenha os objetos na tela de acordo com o x e y calculados com a formula
         #objetos do display_file
 
@@ -176,12 +170,14 @@ class MainWindow(QMainWindow):
             self.scene.addItem(new_object)
         else:
             tam = (len(info.items()) // 2)
-            self.draw_display_file('Wireframe')
-            for i in range(int(tam - 1)):
-                new_object = Reta(info[f'x{i}'], info[f'y{i}'], info[f'x{i+1}'], info[f'y{i+1}'])
-                self.scene.addItem(new_object)
-            new_object = Reta(info[f'x{0}'], info[f'y{0}'], info[f'x{tam-1}'], info[f'y{tam-1}'])
-            self.scene.addItem(new_object)
+            list = []
+            for i in range(int(tam)):
+                new_object = QPointF(int(info[f'x{i}']), int(info[f'y{i}']))
+                list.append(new_object)
+            new_object = Wireframe(list)
+            for line in new_object.lines:
+                self.scene.addItem(line)
+            self.draw_display_file(new_object)
 
     def draw_objects(self):
         for object in self.display_file:
