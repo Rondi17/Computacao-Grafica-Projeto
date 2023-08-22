@@ -15,11 +15,12 @@ class MainWindow(QMainWindow):
         self.display_file = []
         #self.setGeometry(100, 100, 800, 600)
         self.title = "Sistema Gráfico Interativo 2D"
-        self.left = 100
+        self.left = 500
         self.top = 100
         self.width = 800
         self.height = 600
         self.initUI()
+        self.user_info = []
 
         self.factor = 1.25
 
@@ -144,19 +145,25 @@ class MainWindow(QMainWindow):
 
 
     #tela para criar um novo objeto
-    def get_object_information(self):
-        print("new object!")
-
-        box = DialogBox()
+    def get_object_information(self, new):
+        #print("get_object_information chamado!")
+        box = DialogBox(new)
         if box.exec():
             user_input = box.get_input()
-            print("Entrada: ", user_input)
-            self.create_new_object(user_input)
+            #print("user_input: ", user_input)
+        if user_input["continue"] == True:
+            #print("salvado coordenada")
+            cord = (user_input["x1"], user_input["y1"], user_input["x2"], user_input["y2"])
+            self.user_info.append(cord)
+            print("user_info:", self.user_info)
+            self.get_object_information(True)
+        if len(self.user_info) != 0:
+            user_input["cords"] = self.user_info
         else:
-            print("cancel!")
-    
-    #funcao recebe um dicionario ex:  {'opcao': 'Ponto', 'x': 10, 'y': 20}
-    #e cria um novo objeto
+            self.create_new_object(user_input)
+            #print("informações para criar objeto:\n")
+            #print(user_input)
+
     def create_new_object(self, info):
         if info['opcao'] == "Ponto":
             new_object = Ponto(info['x'], info['y'])
@@ -169,15 +176,16 @@ class MainWindow(QMainWindow):
             self.draw_display_file(new_object)
             self.scene.addItem(new_object)
         else:
-            tam = (len(info.items()) // 2)
-            list = []
-            for i in range(int(tam)):
-                new_object = QPointF(int(info[f'x{i}']), int(info[f'y{i}']))
-                list.append(new_object)
-            new_object = Wireframe(list)
-            for line in new_object.lines:
-                self.scene.addItem(line)
-            self.draw_display_file(new_object)
+            print("vai fazer poligono")
+            # tam = (len(info.items()) // 2)
+            # list = []
+            # for i in range(int(tam)):
+            #     new_object = QPointF(int(info[f'x{i}']), int(info[f'y{i}']))
+            #     list.append(new_object)
+            # new_object = Wireframe(list)
+            # for line in new_object.lines:
+            #     self.scene.addItem(line)
+            # self.draw_display_file(new_object)
 
     def draw_objects(self):
         for object in self.display_file:
