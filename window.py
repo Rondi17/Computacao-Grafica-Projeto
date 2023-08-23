@@ -20,19 +20,15 @@ class MainWindow(QMainWindow):
         self.width = 800
         self.height = 600
         self.initUI()
-        self.user_info = []
-
+        self.wire_cord = []
         self.factor = 1.25
 
     def initUI(self):
         self.setWindowTitle(self.title)
-        #setGeometry(x inicial,y inicial,)
         self.setGeometry(self.left, self.top, self.width, self.height)
-        #self.setFixedSize(QSize(400, 300))
         self.create_viewport()
         self.create_buttons()
         self.create_objects_widget()
-        self.draw_objects()
         self.show()
 
     def create_objects_widget(self):
@@ -45,8 +41,6 @@ class MainWindow(QMainWindow):
         objeto.setText(object.name)
         self.objects_widget.addItem(objeto)
         self.objects_widget.update()
-        #cria a viewport  e desenha os objetos na tela de acordo com o x e y calculados com a formula
-        #objetos do display_file
 
     def create_buttons(self):
         #botao novo objeto
@@ -85,8 +79,6 @@ class MainWindow(QMainWindow):
         botaoDown.move(45, 410)
         botaoDown.resize(70, 30)
         botaoDown.clicked.connect(self.pan_Down)
-
-
 
     def create_viewport(self):
         self.scene = QGraphicsScene()
@@ -141,28 +133,24 @@ class MainWindow(QMainWindow):
 
         #Set noAnchor to GraphicsView, enabling the view to move
         self.view.setTransformationAnchor(QGraphicsView.ViewportAnchor(0))
-        
 
-
-    #tela para criar um novo objeto
     def get_object_information(self, new):
-        #print("get_object_information chamado!")
+        user_input = {}
         box = DialogBox(new)
         if box.exec():
             user_input = box.get_input()
-            #print("user_input: ", user_input)
         if user_input["continue"] == True:
-            #print("salvado coordenada")
             cord = (user_input["x1"], user_input["y1"], user_input["x2"], user_input["y2"])
-            self.user_info.append(cord)
-            print("user_info:", self.user_info)
+            self.wire_cord.append(cord)
             self.get_object_information(True)
-        if len(self.user_info) != 0:
-            user_input["cords"] = self.user_info
+        if len(self.wire_cord) != 0:
+            cord = (user_input["x1"], user_input["y1"], user_input["x2"], user_input["y2"])
+            self.wire_cord.append(cord)
+            user_input["cords"] = self.wire_cord
+            user_input["opcao"] = "Wireframe"
+            self.create_new_object(user_input)
         else:
             self.create_new_object(user_input)
-            #print("informações para criar objeto:\n")
-            #print(user_input)
 
     def create_new_object(self, info):
         if info['opcao'] == "Ponto":
@@ -171,33 +159,29 @@ class MainWindow(QMainWindow):
             self.draw_display_file(new_object)
             self.scene.addItem(new_object)
         elif info["opcao"] == "Reta":
-            print("criar reta")
             new_object = Reta(info['x1'], info['y1'], info['x2'], info['y2'])
             self.draw_display_file(new_object)
             self.scene.addItem(new_object)
         else:
-            print("vai fazer poligono")
-            # tam = (len(info.items()) // 2)
-            # list = []
-            # for i in range(int(tam)):
-            #     new_object = QPointF(int(info[f'x{i}']), int(info[f'y{i}']))
-            #     list.append(new_object)
-            # new_object = Wireframe(list)
-            # for line in new_object.lines:
-            #     self.scene.addItem(line)
-            # self.draw_display_file(new_object)
-
-    def draw_objects(self):
-        for object in self.display_file:
-            #self.view.mapToScene(0, 0)
-            pass
-
+            if "cords" not in info:
+                print("Wireframe deve ter mais de um lado\n")
+            else:
+                coordenadas = info["cords"]
+                list = []
+                for i  in coordenadas:
+                    new_object = QPointF(int(i[0]), int(i[1]))
+                    new_object_nd = QPointF(int(i[2]), int(i[3]))
+                    list.append(new_object)
+                    list.append(new_object_nd)
+                new_object = Wireframe(list)
+                for line in new_object.lines:
+                    self.scene.addItem(line)
+                self.draw_display_file(new_object)
 
     @QtCore.pyqtSlot()
     def zoom_in(self):
         scale_tr = QtGui.QTransform()
         scale_tr.scale(self.factor, self.factor)
-
         tr = self.view.transform() * scale_tr
         self.view.setTransform(tr)
 
@@ -205,7 +189,6 @@ class MainWindow(QMainWindow):
     def zoom_out(self):
         scale_tr = QtGui.QTransform()
         scale_tr.scale(self.factor, self.factor)
-
         scale_inverted, invertible = scale_tr.inverted()
 
         if invertible:

@@ -32,7 +32,6 @@ class DialogBox(QDialog):
     def init_box(self):
         if self.new_coordinate == False:
             
-
             self.option_label = QLabel("Selecione um Objeto:")
             self.layout.addWidget(self.option_label)
 
@@ -61,13 +60,8 @@ class DialogBox(QDialog):
                 self.plus_button = QPushButton("+", self)
                 self.plus_button.clicked.connect(self.on_plus)
                 self.fields_layout.addWidget(self.plus_button)
-
-                self.pol_button = QPushButton("desenhar poligono", self)
-                self.pol_button.clicked.connect(self.build_polygon)
-                self.fields_layout.addWidget(self.pol_button)
         else:
             option = self.option_combo.currentText()
-
             if option == "Ponto":
                 self.fields_layout.addWidget(QLabel("Nome:"))
                 self.nome = QLineEdit()
@@ -110,14 +104,8 @@ class DialogBox(QDialog):
                 self.plus_button = QPushButton("+", self)
                 self.plus_button.clicked.connect(self.on_plus)
                 self.fields_layout.addWidget(self.plus_button)
-                #salvar os pontos que foram digitados em uma lista
-                #limpar os campos, mas sem sair da opcao wireframe
-    
-    def build_polygon(self):
-        self.build = True
 
     def on_plus(self):
-        print("botao de + ativado")
         self.plus_button_activate = True
         self.new_coordinate = True
         self.accept()
@@ -168,7 +156,3 @@ class DialogBox(QDialog):
                 "x2": int(self.x2_input.text()),
                 "y2": int(self.y2_input.text())
             }
-            #for i in range(self.cnt-1):
-                ##dic[f'x{i}'] =  int(self.listX[i].text())
-                #dic[f'y{i}'] =  int(self.listY[i].text())
-            #return dic
