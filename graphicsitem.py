@@ -9,15 +9,19 @@ class GraphicsItem:
 
 class Ponto(QGraphicsEllipseItem):
     def __init__(self, x, y):
-        super().__init__(x, y, 10, 10)
+        super().__init__(x, y, 1, 1)
         self.setBrush(Qt.black)
         self.name = "Ponto"
+        self.z1 = 1
+        
 
 
 class Reta(QGraphicsLineItem):
     def __init__(self, x1, y1, x2, y2):
         super().__init__(x1, y1, x2, y2)
         self.name = "Reta"
+        self.z1 = 1
+        self.z2 = 1
 
 
 class Wireframe():
@@ -25,10 +29,11 @@ class Wireframe():
         self.lines = []
         self.criar(lista)
         self.name = "Wireframe"
+        self.points = lista
 
     def criar(self, lista):
         for i in range(len(lista)):
             x1, y1, x2, y2 = lista[i-1].x(), lista[i-1].y(), lista[i].x(), lista[i].y()
-            print(f'x1 = {x1}, x2 = {x2}, y1 = {y1}, y2 = {y2}')
-            self.lines.append(QGraphicsLineItem(x1, y1, x2, y2))
+            print(f'x1 = {x1}, y1 = {y1}, x2 = {x2}, y2 = {y2}')
+            self.lines.append(Reta(x1, y1, x2, y2))
         

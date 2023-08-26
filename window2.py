@@ -46,20 +46,7 @@ class DialogBox(QDialog):
         self.clear_fields()
 
         if self.new_coordinate == True:
-                self.fields_layout.addWidget(QLabel("Novo (x,y) do poligono"))
-                self.x1_input = QLineEdit()
-                self.y1_input = QLineEdit()
-                self.fields_layout.addWidget(self.x1_input)
-                self.fields_layout.addWidget(self.y1_input)
-
-                self.fields_layout.addWidget(QLabel("Ponto final (x2, y2):"))
-                self.x2_input = QLineEdit()
-                self.y2_input = QLineEdit()
-                self.fields_layout.addWidget(self.x2_input)
-                self.fields_layout.addWidget(self.y2_input)
-                self.plus_button = QPushButton("+", self)
-                self.plus_button.clicked.connect(self.on_plus)
-                self.fields_layout.addWidget(self.plus_button)
+                pass
         else:
             option = self.option_combo.currentText()
             if option == "Ponto":
@@ -87,28 +74,47 @@ class DialogBox(QDialog):
                 self.fields_layout.addWidget(self.x2_input)
                 self.fields_layout.addWidget(self.y2_input)
             elif option == "Wireframe":
-                self.fields_layout.addWidget(QLabel("Nome:"))
-                self.nome = QLineEdit()
-                self.fields_layout.addWidget(self.nome)
-                self.fields_layout.addWidget(QLabel("Ponto inicial (x1, y1):"))
-                self.x1_input = QLineEdit()
-                self.y1_input = QLineEdit()
-                self.fields_layout.addWidget(self.x1_input)
-                self.fields_layout.addWidget(self.y1_input)
+                self.nLados_label = QLabel("Informe a quantidade de lados do polígono:")
+                self.fields_layout.addWidget(self.nLados_label)
+                
+                self.nLados_input = QLineEdit()
+                self.fields_layout.addWidget(self.nLados_input)
 
-                self.fields_layout.addWidget(QLabel("Ponto final (x2, y2):"))
-                self.x2_input = QLineEdit()
-                self.y2_input = QLineEdit()
-                self.fields_layout.addWidget(self.x2_input)
-                self.fields_layout.addWidget(self.y2_input)
                 self.plus_button = QPushButton("+", self)
-                self.plus_button.clicked.connect(self.on_plus)
                 self.fields_layout.addWidget(self.plus_button)
+                self.plus_button.clicked.connect(self.on_plus)
+                
+                
+                
 
     def on_plus(self):
-        self.plus_button_activate = True
-        self.new_coordinate = True
-        self.accept()
+        self.nLados = int(self.nLados_input.text())
+        
+        self.fields_layout.removeWidget(self.nLados_label)
+        self.nLados_label.deleteLater()
+        self.fields_layout.removeWidget(self.nLados_input)
+        self.nLados_input.deleteLater()
+        self.fields_layout.removeWidget(self.plus_button)
+        self.plus_button.deleteLater()
+
+        if self.nLados < 3:
+            return # O poligono deve ter pelo menos 3 lados
+        
+        self.fields_layout.addWidget(QLabel("Nome:"))
+        self.nome = QLineEdit()
+        self.fields_layout.addWidget(self.nome)
+        self.listX = []
+        self.listY = []
+        for i in range(self.nLados):
+            self.fields_layout.addWidget(QLabel(f"Ponto (x{i+1}, y{i+1}):"))
+            self.xInput = QLineEdit()
+            self.yInput = QLineEdit()
+            self.fields_layout.addWidget(self.xInput)
+            self.fields_layout.addWidget(self.yInput)
+            self.listX.append(self.xInput)
+            self.listY.append(self.yInput)
+
+
 
     def clear_fields(self):
         for i in reversed(range(self.fields_layout.count())):
@@ -117,16 +123,7 @@ class DialogBox(QDialog):
                 widget.deleteLater()
 
     def get_input(self):
-        if self.new_coordinate == False:
-            option = self.option_combo.currentText()
-        else:
-            return {
-                "continue" : self.plus_button_activate,
-                "x1": int(self.x1_input.text()),
-                "y1": int(self.y1_input.text()),
-                "x2": int(self.x2_input.text()),
-                "y2": int(self.y2_input.text())
-            }
+        option = self.option_combo.currentText()
 
         if option == "Ponto":
             return {
@@ -134,7 +131,6 @@ class DialogBox(QDialog):
                 "nome": self.nome.text(),
                 "x": int(self.x_input.text()),
                 "y": int(self.y_input.text()),
-                "continue": False
             }
         elif option == "Reta":
             return {
@@ -144,15 +140,12 @@ class DialogBox(QDialog):
                 "y1": int(self.y1_input.text()),
                 "x2": int(self.x2_input.text()),
                 "y2": int(self.y2_input.text()),
-                "continue": False
             }
         elif option == "Wireframe":
-            return {
-                "opcao": option,
-                "nome": self.nome.text(),
-                "continue" : self.plus_button_activate,
-                "x1": int(self.x1_input.text()),
-                "y1": int(self.y1_input.text()),
-                "x2": int(self.x2_input.text()),
-                "y2": int(self.y2_input.text())
-            }
+            dic = dict()
+            dic['opcao'] = option
+            dic['nome'] = self.nome.text()
+            for i in range(self.nLados):
+                dic[f'x{i+1}'] = int(self.listX[i].text())
+                dic[f'y{i+1}'] = int(self.listY[i].text())
+            return dic
