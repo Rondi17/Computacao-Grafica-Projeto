@@ -7,6 +7,7 @@ from PyQt5.QtGui import *
 from graphicsitem import Ponto, Reta, Wireframe
 from window2 import DialogBox
 import numpy as np
+import math
 
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -145,6 +146,16 @@ class MainWindow(QMainWindow):
         botaoScale.resize(90, 30)
         botaoScale.clicked.connect(self.scale_call)
 
+        botaoRotate = QPushButton('Rotate', self)
+        botaoRotate.move(45, 560)
+        botaoRotate.resize(90, 30)
+        botaoRotate.clicked.connect(self.rotate_call)
+
+        botaoChangeColor = QPushButton('Change Color', self)
+        botaoChangeColor.move(135, 530)
+        botaoChangeColor.resize(90, 30)
+        botaoChangeColor.clicked.connect(self.changeColor)
+
 
     def create_viewport(self):
         self.scene = QGraphicsScene()
@@ -170,6 +181,7 @@ class MainWindow(QMainWindow):
             self.scene.addItem(new_object)
         elif info["opcao"] == "Reta":
             new_object = Reta(info['x1'], info['y1'], info['x2'], info['y2'])
+            self.display_file.append(new_object)
             self.add_on_display_file(new_object)
             self.scene.addItem(new_object)
         else:
@@ -179,6 +191,7 @@ class MainWindow(QMainWindow):
                 point = QPointF(info[f'x{i+1}'], info[f'y{i+1}'])
                 list.append(point)
             new_object = Wireframe(list)
+            self.display_file.append(new_object)
             for line in new_object.lines:
                 self.scene.addItem(line)
             self.add_on_display_file(new_object)
@@ -223,10 +236,139 @@ class MainWindow(QMainWindow):
         self.view.translate(0, -self.panFactor)
         self.view.update()
 
-    def transform_3D(self, object):
-        if object.type() == Wireframe:
+    @QtCore.pyqtSlot()
+    def changeColor(self):
+        self.dialog = QDialog(self)
+        
+
+        self.dialog.setWindowTitle("Qual objeto deseja mudar de cor?")
+        self.layout = QVBoxLayout(self.dialog)
+
+        self.option_combo = QComboBox()
+        for item in self.display_file:
+            self.option_combo.addItem(item.name)
+        self.layout.addWidget(self.option_combo)
+
+        submit_button = QPushButton('Ok')
+        self.layout.addWidget(submit_button)
+        submit_button.clicked.connect(lambda: self.colorDialog())
+        
+
+
+        self.dialog.exec_()
+
+    def colorDialog(self):
+        self.colorDialog = QColorDialog(self)
+        self.colorDialog.setCurrentColor(Qt.red)
+        self.colorDialog.accepted.connect(lambda: print("accepted Signal"))
+        color = self.colorDialog.selectedColor()
+        print(type(color))
+        self.setColor(color)
+        self.colorDialog.done(1)
+        self.colorDialog.exec_()
+
+    def setColor(self, color):
+        self.dialog.accept()
+        for item in self.display_file:
+            if item.name == self.option_combo.currentText():
+                object = item
+        pen = QPen(color)
+        if type(object) == Wireframe:
+            for line in object.lines:
+                line.setPen(pen)
+        else:
+            object.setPen(pen)
+
+
+    @QtCore.pyqtSlot()
+    def rotate_call(self):
+        self.dialog = QDialog(self)
+        
+
+        self.dialog.setWindowTitle("Informe quantos graus deseja rodar o objeto")
+        self.layout = QVBoxLayout(self.dialog)
+
+        degreesLabel = QLabel('Graus:')
+        self.layout.addWidget(degreesLabel)
+        self.degreesInput = QLineEdit()
+        self.layout.addWidget(self.degreesInput)
+
+
+        self.option_combo = QComboBox()
+        self.option_combo.addItems(['Centro do mundo', 'Centro do objeto', 'Ponto especifico'])
+        self.layout.addWidget(self.option_combo)
+
+
+        submit_button = QPushButton('Ok')
+        self.layout.addWidget(submit_button)
+        submit_button.clicked.connect(lambda: self.validate_center(self.objects[0]))
+
+        self.dialog.exec_()
+
+    @QtCore.pyqtSlot()
+    def validate_center(self, object):
+        option = self.option_combo.currentText()
+        if option == 'Ponto especifico':
+            centerX, centerY = self.ask_point()
+            self.rotate_object(float(self.degreesInput.text()), object, centerX, centerY)
+        elif option == 'Centro do mundo':
+            self.rotate_object(float(self.degreesInput.text()), object, 0, 0)
+        else:
+            centerX = 0
+            centerY = 0
             for point in object.points:
-                pass
+                centerX += point.x()
+                centerY += point.y()
+            centerX = centerX / len(object.points)
+            centerY = centerY / len(object.points)
+            self.rotate_object(float(self.degreesInput.text()), object, centerX, centerY)
+    
+    def ask_point(self):
+        '''for item in self.layout:
+            self.layout.removeWidget(item)
+            item.deleteLater()'''
+        xLabel = QLabel('x:')
+        self.layout.addWidget(xLabel)
+        xInput = QLineEdit()
+        self.layout.addWidget(xInput)
+
+        yLabel = QLabel('y:')
+        self.layout.addWidget(yLabel)
+        yInput = QLineEdit()
+        self.layout.addWidget(yInput)
+        return int(xInput.text()), int(yInput.text())
+
+
+    def rotate_object(self, degrees, object, centerX, centerY):
+        self.dialog.accept()
+        if type(object) == Wireframe:
+            rotate_matrix = self.get_rotate_matrix(degrees)
+            for point in object.points:
+                #print(f'Points before: x = {x}, y = {y}')
+                x = point.x() - centerX
+                y = point.y() - centerY
+                old_points = np.array([x, y, 1])
+                new_points = np.matmul(old_points, rotate_matrix)
+                point.setX(new_points[0] + centerX)
+                point.setY(new_points[1] + centerX)
+                x = point.x()
+                y = point.y()
+                print(f'Points after: x = {x}, y = {y}')
+            
+            for i in range(len(object.lines)):
+                x1 = object.points[i-1].x()
+                y1 = object.points[i-1].y()
+                x2 = object.points[i].x()
+                y2 = object.points[i].y()
+                object.lines[i].setLine(x1, y1, x2, y2)
+                print('line updated')
+            
+
+    def get_rotate_matrix(self, degrees):
+        return np.array([[math.cos(math.radians(degrees)), -(math.sin(math.radians(degrees))), 0],
+                         [math.sin(math.radians(degrees)), math.cos(math.radians(degrees)), 0],
+                         [0, 0, 1]])
+
 
     @QtCore.pyqtSlot()
     def scale_call(self):
