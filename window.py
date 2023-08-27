@@ -45,9 +45,10 @@ class MainWindow(QMainWindow):
         self.display_fileWidget.show()
 
     #Adiciona o objeto passado como parâmetro ao display file
-    def add_on_display_file(self, object):
+    def add_on_display_file(self, object, nome):
         objeto = QListWidgetItem(self.display_fileWidget)
-        objeto.setText(object.name)
+        objeto.setText(nome)
+        object.name = nome
         self.display_fileWidget.addItem(objeto)
         self.display_fileWidget.update()
 
@@ -57,6 +58,13 @@ class MainWindow(QMainWindow):
         botao1.move(100, 200)
         botao1.resize(90, 30)
         botao1.clicked.connect(self.get_object_information)
+        #Shortcut = 'n' or 'N'
+        QtWidgets.QShortcut(
+            QtGui.QKeySequence('n'),
+            self.view,
+            context=QtCore.Qt.WidgetShortcut,
+            activated=self.get_object_information,
+        )
         
         #Botão zoom_in
         botaoZoomIn = QPushButton("Zoom in", self)
@@ -136,25 +144,57 @@ class MainWindow(QMainWindow):
             activated=self.pan_Down,
         )
 
+        #Botão Translate
         botaoTranslate = QPushButton('Translate', self)
         botaoTranslate.move(45, 500)
         botaoTranslate.resize(90, 30)
         botaoTranslate.clicked.connect(self.translate_call)
+        #Shortcut = 't' or 'T'
+        QtWidgets.QShortcut(
+            QtGui.QKeySequence(QtGui.QKeySequence('t')),
+            self.view,
+            context=QtCore.Qt.WidgetShortcut,
+            activated=self.translate_call,
+        )
 
+        #Botão Scale
         botaoScale = QPushButton('Scale', self)
         botaoScale.move(45, 530)
         botaoScale.resize(90, 30)
         botaoScale.clicked.connect(self.scale_call)
+        #Shortcut = 's' or 'S'
+        QtWidgets.QShortcut(
+            QtGui.QKeySequence(QtGui.QKeySequence('s')),
+            self.view,
+            context=QtCore.Qt.WidgetShortcut,
+            activated=self.scale_call,
+        )
 
+        #Botão Rotate
         botaoRotate = QPushButton('Rotate', self)
         botaoRotate.move(45, 560)
         botaoRotate.resize(90, 30)
         botaoRotate.clicked.connect(self.rotate_call)
+        #Shortcut = 's' or 'S'
+        QtWidgets.QShortcut(
+            QtGui.QKeySequence(QtGui.QKeySequence('r')),
+            self.view,
+            context=QtCore.Qt.WidgetShortcut,
+            activated=self.rotate_call,
+        )
 
+        #Botão Change Color
         botaoChangeColor = QPushButton('Change Color', self)
         botaoChangeColor.move(135, 530)
         botaoChangeColor.resize(90, 30)
-        botaoChangeColor.clicked.connect(self.changeColor)
+        botaoChangeColor.clicked.connect(self.changeColor_call)
+        #Shortcut = 'c' or 'C'
+        QtWidgets.QShortcut(
+            QtGui.QKeySequence(QtGui.QKeySequence('c')),
+            self.view,
+            context=QtCore.Qt.WidgetShortcut,
+            activated=self.changeColor_call,
+        )
 
 
     def create_viewport(self):
@@ -166,9 +206,10 @@ class MainWindow(QMainWindow):
         self.view.setTransformationAnchor(QGraphicsView.ViewportAnchor(0))
 
     #tela para criar um novo objeto
-    def get_object_information(self, new):
+    @QtCore.pyqtSlot()
+    def get_object_information(self):
         user_input = {}
-        box = DialogBox(new)
+        box = DialogBox()
         if box.exec():
             user_input = box.get_input()
             self.create_new_object(user_input)
@@ -177,12 +218,12 @@ class MainWindow(QMainWindow):
         if info['opcao'] == "Ponto":
             new_object = Ponto(info['x'], info['y'])
             self.display_file.append(new_object)
-            self.add_on_display_file(new_object)
+            self.add_on_display_file(new_object, info['nome'])
             self.scene.addItem(new_object)
         elif info["opcao"] == "Reta":
             new_object = Reta(info['x1'], info['y1'], info['x2'], info['y2'])
             self.display_file.append(new_object)
-            self.add_on_display_file(new_object)
+            self.add_on_display_file(new_object, info['nome'])
             self.scene.addItem(new_object)
         else:
             lados = (len(info.keys()) - 2) / 2  # Quantidade de lados = quantidade de chaves, menos 2(opcao e nome) divido por dois(cada lado tem x e y)
@@ -194,7 +235,7 @@ class MainWindow(QMainWindow):
             self.display_file.append(new_object)
             for line in new_object.lines:
                 self.scene.addItem(line)
-            self.add_on_display_file(new_object)
+            self.add_on_display_file(new_object, info['nome'])
             self.objects.append(new_object)
 
     @QtCore.pyqtSlot()
@@ -237,9 +278,8 @@ class MainWindow(QMainWindow):
         self.view.update()
 
     @QtCore.pyqtSlot()
-    def changeColor(self):
+    def changeColor_call(self):
         self.dialog = QDialog(self)
-        
 
         self.dialog.setWindowTitle("Qual objeto deseja mudar de cor?")
         self.layout = QVBoxLayout(self.dialog)
@@ -253,33 +293,29 @@ class MainWindow(QMainWindow):
         self.layout.addWidget(submit_button)
         submit_button.clicked.connect(lambda: self.colorDialog())
         
-
-
         self.dialog.exec_()
 
     def colorDialog(self):
-        self.colorDialog = QColorDialog(self)
-        self.colorDialog.setCurrentColor(Qt.red)
-        self.colorDialog.accepted.connect(lambda: print("accepted Signal"))
-        color = self.colorDialog.selectedColor()
-        print(type(color))
-        self.setColor(color)
-        self.colorDialog.done(1)
-        self.colorDialog.exec_()
-
-    def setColor(self, color):
-        self.dialog.accept()
         for item in self.display_file:
             if item.name == self.option_combo.currentText():
                 object = item
-        pen = QPen(color)
-        if type(object) == Wireframe:
-            for line in object.lines:
-                line.setPen(pen)
-        else:
-            object.setPen(pen)
+                break
+        colorDialog = QColorDialog(self)
+        colorDialog.setCurrentColor(Qt.red)
+        if colorDialog.exec_() == QColorDialog.Accepted:
+            color = colorDialog.selectedColor()
 
-
+            pen = QPen(color)
+            if type(object) == Wireframe:
+                for line in object.lines:
+                    print(line)
+                    print(type(line))
+                    line.setPen(color)
+                    #line.update()
+            else:
+                object.setPen(pen)
+            self.dialog.accept()
+            
     @QtCore.pyqtSlot()
     def rotate_call(self):
         self.dialog = QDialog(self)
@@ -294,9 +330,16 @@ class MainWindow(QMainWindow):
         self.layout.addWidget(self.degreesInput)
 
 
+        translateLabel = QLabel('Selecione qual objeto transladar:')
+        self.layout.addWidget(translateLabel)
         self.option_combo = QComboBox()
-        self.option_combo.addItems(['Centro do mundo', 'Centro do objeto', 'Ponto especifico'])
+        for item in self.display_file:
+            self.option_combo.addItem(item.name)
         self.layout.addWidget(self.option_combo)
+
+        self.center_combo = QComboBox()
+        self.center_combo.addItems(['Centro do mundo', 'Centro do objeto', 'Ponto especifico'])
+        self.layout.addWidget(self.center_combo)
 
 
         submit_button = QPushButton('Ok')
@@ -307,12 +350,12 @@ class MainWindow(QMainWindow):
 
     @QtCore.pyqtSlot()
     def validate_center(self, object):
-        option = self.option_combo.currentText()
+        option = self.center_combo.currentText()
         if option == 'Ponto especifico':
             centerX, centerY = self.ask_point()
-            self.rotate_object(float(self.degreesInput.text()), object, centerX, centerY)
+            self.rotate_object(float(self.degreesInput.text()), centerX, centerY)
         elif option == 'Centro do mundo':
-            self.rotate_object(float(self.degreesInput.text()), object, 0, 0)
+            self.rotate_object(float(self.degreesInput.text()), 0, 0)
         else:
             centerX = 0
             centerY = 0
@@ -321,12 +364,9 @@ class MainWindow(QMainWindow):
                 centerY += point.y()
             centerX = centerX / len(object.points)
             centerY = centerY / len(object.points)
-            self.rotate_object(float(self.degreesInput.text()), object, centerX, centerY)
+            self.rotate_object(float(self.degreesInput.text()), centerX, centerY)
     
     def ask_point(self):
-        '''for item in self.layout:
-            self.layout.removeWidget(item)
-            item.deleteLater()'''
         xLabel = QLabel('x:')
         self.layout.addWidget(xLabel)
         xInput = QLineEdit()
@@ -339,8 +379,12 @@ class MainWindow(QMainWindow):
         return int(xInput.text()), int(yInput.text())
 
 
-    def rotate_object(self, degrees, object, centerX, centerY):
+    def rotate_object(self, degrees, centerX, centerY):
         self.dialog.accept()
+        for item in self.display_file:
+            if item.name == self.option_combo.currentText():
+                object = item
+                break
         if type(object) == Wireframe:
             rotate_matrix = self.get_rotate_matrix(degrees)
             for point in object.points:
@@ -388,20 +432,31 @@ class MainWindow(QMainWindow):
         yInput = QLineEdit()
         layout.addWidget(yInput)
 
+        scaleLabel = QLabel('Selecione qual objeto dimensionar:')
+        layout.addWidget(scaleLabel)
+        self.option_combo = QComboBox()
+        for item in self.display_file:
+            self.option_combo.addItem(item.name)
+        layout.addWidget(self.option_combo)
+
 
         submit_button = QPushButton('Ok')
         layout.addWidget(submit_button)
-        submit_button.clicked.connect(lambda: self.scale_object([float(xInput.text()), float(yInput.text())], self.objects[0]))
+        submit_button.clicked.connect(lambda: self.scale_object([float(xInput.text()), float(yInput.text())]))
 
         self.dialog.exec_()
 
 
-    def scale_object(self, vector2D, object):
+    def scale_object(self, vector):
         self.dialog.accept()
+        for item in self.display_file:
+            if item.name == self.option_combo.currentText():
+                object = item
+                break
         if type(object) == Wireframe:
-            vectorArray = np.array(vector2D)
+            vectorArray = np.array(vector)
             vectorArray = np.append(vectorArray, 1)
-            scale_matrix = self.get_scale_matrix(vectorArray)
+            scale_matrix = self.get_scale_matrix(vector)
             centerX = 0
             centerY = 0
             for point in object.points:
@@ -431,9 +486,9 @@ class MainWindow(QMainWindow):
                 object.lines[i].setLine(x1, y1, x2, y2)
                 print('line updated')
 
-    def get_scale_matrix(self, vectorArray):
-        return np.array([[vectorArray[0], 0, 0],
-                                     [0, vectorArray[1], 0],
+    def get_scale_matrix(self, vector):
+        return np.array([[vector[0], 0, 0],
+                                     [0, vector[1], 0],
                                      [0, 0, 1]])
     
     @QtCore.pyqtSlot()
@@ -454,26 +509,31 @@ class MainWindow(QMainWindow):
         yInput = QLineEdit()
         layout.addWidget(yInput)
 
+        translateLabel = QLabel('Selecione qual objeto transladar:')
+        layout.addWidget(translateLabel)
+        self.option_combo = QComboBox()
+        for item in self.display_file:
+            self.option_combo.addItem(item.name)
+        layout.addWidget(self.option_combo)
 
         submit_button = QPushButton('Ok')
         layout.addWidget(submit_button)
-        submit_button.clicked.connect(lambda: self.translate_object([int(xInput.text()), int(yInput.text())], self.objects[0]))
-
-
-
+        submit_button.clicked.connect(lambda: self.translate_object([int(xInput.text()), int(yInput.text())]))
 
         self.dialog.exec_()
 
 
 
-    def translate_object(self, vector2D, object):
+    def translate_object(self, vector):
         self.dialog.accept()
+        for item in self.display_file:
+            if item.name == self.option_combo.currentText():
+                object = item
+                break
         if type(object) == Wireframe:
-            vectorArray = np.array([vector2D])
+            vectorArray = np.array([vector])
             vectorArray = np.append(vectorArray, 1)
-            translate_matrix = np.array([[1, 0, 0],
-                                        [0, 1, 0],
-                                        vectorArray])
+            translate_matrix = self.get_translate_matrix(vector)
             for point in object.points:
                 x = point.x()
                 y = point.y()
@@ -494,6 +554,11 @@ class MainWindow(QMainWindow):
                 y2 = object.points[i].y()
                 object.lines[i].setLine(x1, y1, x2, y2)
                 print('line updated')
+
+    def get_translate_matrix(self, vector):
+        return np.array([[1, 0, 0],
+                        [0, 1, 0],
+                        [vector[0], vector[1], 1]])
                 
 
         
