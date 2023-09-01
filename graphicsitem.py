@@ -9,6 +9,7 @@ class GraphicsItem:
 
 class Ponto(QGraphicsEllipseItem):
     def __init__(self, x, y):
+        print(f'try instantiate point {x}, {y}')
         super().__init__(x, y, 1, 1)
         self.setBrush(Qt.black)
         self.name : str
