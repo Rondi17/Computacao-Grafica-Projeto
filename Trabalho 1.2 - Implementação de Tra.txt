@@ -1,0 +1,32 @@
+Trabalho 1.2 - Implementação de Transformações 2D e Coordenadas Homogêneas
+Computação Gráfica (INE5420) Ciências da Computação
+Universidade Federal de Santa Catarina
+Prof. Aldo Von Wangenheim
+Alunos: Alisson Rafael Barbosa 21104150
+	Rondinelly Martins Silva 21100140
+
+Instruções:
+
+- Instalar PyQt5:
+	pip install Pyqt5
+
+- Para iniciar o programa execute o arquivo main.py
+- Para desenhar escolha o tipo do objeto, digite um nome e as coordenadas
+
+- Para desenhar um poligono:
+1. deve-se digitar as coordenadas de cada lado por vez.
+2. para adicionar mais um lado, clique no "+".
+
+- Para mover pela viewport:
+1. É possível mover pelo mundo utilizando os botões: Up, Down, Left, Right
+2. Atalhos para os botões(setas do teclado):
+	Up = ↑
+	Down = ↓
+	Left = ←
+	Rigth = →
+
+- Zoom: É possível dar zoom_in e zoom_out utilizando os respectivos botões, ou utilizando os atalhos 'ctrl +' para zoom_in e 'ctrl -' para zoom_out.
+- Translação: Selecione o objeto e o ponto para onde o objeto vai ser movido.
+- Rotação: Digite os graus da rotação, selecione o objeto e o ponto de referencia
+- Escalonamento: Digite os fatores de multiplicação no x e no y.Selecione o objeto.
+- Cor: Escolha uma cor e o objeto.
