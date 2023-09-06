@@ -287,6 +287,8 @@ class MainWindow(QMainWindow):
         ##print(f'lenDF = {len(self.display_file)}, {self.display_file}')
         self.view.centerOn(self.Window.x_max-self.Window.x_min, self.Window.y_max-self.Window.y_min)
 
+
+
     def new_zoom_in(self):
         #antes
         # self.Window.x_max = self.Window.x_max * (-self.zoomFactor)
@@ -474,23 +476,23 @@ class MainWindow(QMainWindow):
         option = self.center_combo.currentText()
         if option == 'Ponto especifico':
             centerX, centerY = int(self.xInput.text()), int(self.yInput.text())
-            self.rotate_object(float(self.degreesInput.text()), centerX, centerY)
+            self.rotate_object(float(self.degreesInput.text()), object, centerX, centerY)
         elif option == 'Centro do mundo':
-            self.rotate_object(float(self.degreesInput.text()), 0, 0)
+            self.rotate_object(float(self.degreesInput.text()), object, 0, 0)
         else:
-            centerX = 0
-            centerY = 0
+            object.centerX = 0
+            object.centerY = 0
             if type(object) == Wireframe:
                 for point in object.points:
-                    centerX += point.x()
-                    centerY += point.y()
-                centerX = centerX / len(object.points)
-                centerY = centerY / len(object.points)
-                self.rotate_object(float(self.degreesInput.text()), centerX, centerY)
+                    object.centerX += point.x()
+                    object.centerY += point.y()
+                object.centerX = object.centerX / len(object.points)
+                object.centerY = object.centerY / len(object.points)
+                self.rotate_object(float(self.degreesInput.text()), object, object.centerX, object.centerY)
             elif type(object) == Reta:
-                centerX = (object.line().x1() + object.line().x2()) / 2
-                centerY = (object.line().y1() + object.line().y2()) / 2
-                self.rotate_object(float(self.degreesInput.text()), centerX, centerY)
+                object.centerX = (object.line().x1() + object.line().x2()) / 2
+                object.centerY = (object.line().y1() + object.line().y2()) / 2
+                self.rotate_object(float(self.degreesInput.text()), object, object.centerX, object.centerY)
     
     def ask_point(self):
         self.xLabel = QLabel('x:')
@@ -523,20 +525,10 @@ class MainWindow(QMainWindow):
 
         
 
-    def rotate_object(self, degrees, centerX, centerY):
+    def rotate_object(self, object, degrees, centerX, centerY):
         self.dialog.accept()
         
-        # Seleciona object com base na escolha to usuário na QComboBox sel.option_combo
-        for item in self.display_file:
-            if item.name == self.option_combo.currentText():
-                object = item
-                break
-        
-        translate_toOrigin_matrix = self.get_translate_toOrigin_matrix([centerX, centerY])
-        rotate_matrix = self.get_rotate_matrix(degrees)
-        translate_back = self.get_translate_matrix([centerX, centerY])
-        final_matrix = np.matmul(translate_toOrigin_matrix, rotate_matrix)
-        final_matrix = np.matmul(final_matrix, translate_back)
+        final_matrix = self.get_final_rotate_matrix(degrees, centerX, centerY)
 
         if type(object) == Reta:
             x1, y1, x2, y2 = object.line().x1(), object.line().y1(), object.line().x2(), object.line().y2()
@@ -574,6 +566,15 @@ class MainWindow(QMainWindow):
                 print('line updated')
                 self.draw_dispplay_file(object.lines[i])
                 self.update_viewport()
+
+    def get_final_rotate_matrix(self, degrees, centerX, centerY):
+        translate_toOrigin_matrix = self.get_translate_toOrigin_matrix([centerX, centerY])
+        rotate_matrix = self.get_rotate_matrix(degrees)
+        translate_back = self.get_translate_matrix([centerX, centerY])
+        final_matrix = np.matmul(translate_toOrigin_matrix, rotate_matrix)
+        final_matrix = np.matmul(final_matrix, translate_back)
+        return final_matrix
+
             
     def get_rotate_matrix(self, degrees):
         return np.array([[math.cos(math.radians(degrees)), -(math.sin(math.radians(degrees))), 0],
@@ -622,21 +623,11 @@ class MainWindow(QMainWindow):
                 break
         
         #Calcula centro do objeto
-        centerX = 0
-        centerY = 0
-        if type(object) == Wireframe:
-            for point in object.points:
-                centerX += point.x()
-                centerY += point.y()
-            centerX = centerX / len(object.points)
-            centerY = centerY / len(object.points)
-        elif type(object) == Reta:
-            centerX = (object.line().x1() + object.line().x2()) / 2
-            centerY = (object.line().y1() + object.line().y2()) / 2
+        object.calculateCenter()
 
-        translate_toOrigin_matrix = self.get_translate_toOrigin_matrix([centerX, centerY])
+        translate_toOrigin_matrix = self.get_translate_toOrigin_matrix(object.getCenter())
         scale_matrix = self.get_scale_matrix(vector)
-        translate_back = self.get_translate_matrix([centerX, centerY])
+        translate_back = self.get_translate_matrix(object.getCenter())
         final_matrix = np.matmul(translate_toOrigin_matrix, scale_matrix)
         final_matrix = np.matmul(final_matrix, translate_back)
 
@@ -777,3 +768,47 @@ class MainWindow(QMainWindow):
         return np.array(([[1, 0, 0],
                         [0, 1, 0],
                         [-vector[0], -vector[1], 1]]))
+    
+    def gerar_SCN(self):
+        #0. Crie ou mova a window onde deseja
+        self.Window = Window(100, 600, 100, 500) #Pegar coordenadas de onde se deseja criar o mundo e angulo?
+        #1. Translate Wc para origem(translade o mundo para o centro do objeto)
+        translate_matrix = self.get_translate_matrix([-self.Window.centerX, -self.Window.centerY])
+
+        #2. Determine Vup e angulo de Vup com Y
+        #Define Vup como aresta esquerda da window, e então rotaciona a aresta
+        self.Window.Vup = Reta(self.Window.x_min, self.Window.y_min, self.Window.x_min, self.Window.y_max)
+        degrees = 30.0
+        rotate_matrix = self.get_rotate_matrix(degrees)
+        scale_matrix = self.get_scale_matrix([self.Window.centerX, self.Window.centerY])
+        
+        final_matrix = np.matmul(translate_matrix, rotate_matrix)
+        final_matrix = np.matmul(final_matrix, scale_matrix)
+
+
+
+        #Precisa definir vetor e alinhar mundo com vetor
+        #3. Rotacione o mundo de forma a alinhar Vup com o eixo Y
+        for item in self.display_file:
+            if type(item) == Reta:
+                x1, y1, x2, y2 = item.line.x1(), item.line.y1(), item.line.x2(), item.line.y2()
+                old_l1 = np.array([x1, y1, 1])
+                old_l2 = np.array([x2, y2, 1])
+                new_l1 = np.matmul(old_l1, final_matrix)
+                new_l2 = np.matmul(old_l2, final_matrix)
+                item.x1N = new_l1[0]
+                item.y1N = new_l1[1]
+                item.x2N = new_l2[0]
+                item.y2N = new_l2[1]
+
+                #self.draw_dispplay_file(item) ???
+                #Deve-se desenhar o objeto na window com coordenadas normalizadas?
+
+            if type(item) == Wireframe:
+                for reta in item.lines:
+                    x1, y1, x2, y2 = reta.line.x1(), reta.line.y1(), reta.line.x2(), reta.line.y2()
+                    reta.x1N = x1
+                    reta.y1N = y1
+                    reta.x2N = x2
+                    reta.y2N = y2
+                    
