@@ -1,7 +1,7 @@
 from PyQt5.QtWidgets import QGraphicsLineItem, QGraphicsEllipseItem, QGraphicsPolygonItem, QGraphicsItem
 from PyQt5.QtCore import Qt, QPoint
 
-#obs: colocar tipo
+
 class GraphicsItem:
     def __init__(self, x, y):
         self.x = x
