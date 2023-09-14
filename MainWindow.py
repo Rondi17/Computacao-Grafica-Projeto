@@ -7,6 +7,7 @@ from PyQt5.QtGui import *
 from graphicsitem import Ponto, Reta, Wireframe
 from window2 import DialogBox
 from window import Window
+from descriptor_obj import FileObj
 import numpy as np
 import math
 
@@ -16,6 +17,7 @@ class MainWindow(QMainWindow):
 
         self.display_file = []
         self.onViewport = []
+        #self.setGeometry(100, 100, 800, 600)
         self.title = "Sistema Gráfico Interativo 2D"
         self.left = 500
         self.top = 100
@@ -39,7 +41,7 @@ class MainWindow(QMainWindow):
         
     def set_window_default_paramaters(self):
         #window dimensions
-        self.Window = Window(0, 600, 0, 500)
+        self.Window_mundo = Window(0, 2000, 0, 1500)
 
         #viewport dimensions
         self.xv_min = 0
@@ -49,19 +51,25 @@ class MainWindow(QMainWindow):
 
         self.scale_acumulator = 1
 
-
     def initUI(self):
         self.wire_cord = []
-        self.zoomFactor = 1.1   #Fator utilizado para zoom_in e zoom_out na viewport
-        self.panFactor = 40.0   #Fator utilizado para pan na viewport
+        #Fator utilizado para zoom_in e zoom_out na viewport
+        self.zoomFactor = 1.1
+        #Fator utilizado para pan na viewport
+        self.panFactor = 40.0
         self.objects = []
         self.setWindowTitle(self.title)
         self.setGeometry(self.left, self.top, self.width, self.height)
         self.create_viewport()
         self.create_buttons()
         self.create_display_fileWidget()
-        self.create_window_reference()
+        self.create_window()
         self.objects_test()
+        # print("x_min: ", self.window.x_min)
+        # print("x_max: ", self.window.x_max)
+        # print("y_min: ", self.window.y_min)
+        # print("y_max: ", self.window.y_max)
+        # print(" ")
         self.show()
 
     #Cria o ListWidget responsável por representar o displayfile
@@ -120,7 +128,7 @@ class MainWindow(QMainWindow):
         
         #Botão left
         botaoLeft = QPushButton("←", self)
-        botaoLeft.move(10, 380)
+        botaoLeft.move(10, 330)
         botaoLeft.resize(50, 30)
         botaoLeft.clicked.connect(self.pan_Left)
         #Shortcut = '←'
@@ -133,7 +141,7 @@ class MainWindow(QMainWindow):
 
         #Botão Right
         botaoRight = QPushButton("→", self)
-        botaoRight.move(110, 380)
+        botaoRight.move(110, 330)
         botaoRight.resize(50, 30)
         botaoRight.clicked.connect(self.pan_Rigth)
         #Shortcut = '→'
@@ -146,7 +154,7 @@ class MainWindow(QMainWindow):
 
         #Botão Up
         botaoUp = QPushButton("↑", self)
-        botaoUp.move(60, 350)
+        botaoUp.move(60, 300)
         botaoUp.resize(50, 30)
         botaoUp.clicked.connect(self.pan_Up)
         #Shortcut = '↑'
@@ -159,7 +167,7 @@ class MainWindow(QMainWindow):
 
         #Botão Down
         botaoDown = QPushButton("↓", self)
-        botaoDown.move(60, 380)
+        botaoDown.move(60, 330)
         botaoDown.resize(50, 30)
         botaoDown.clicked.connect(self.pan_Down)
         #Shortcut = '↓'
@@ -201,7 +209,6 @@ class MainWindow(QMainWindow):
         botaoRotate.move(45, 560)
         botaoRotate.resize(90, 30)
         botaoRotate.clicked.connect(self.rotate_call)
-        #Shortcut = 's' or 'S'
         QtWidgets.QShortcut(
             QtGui.QKeySequence(QtGui.QKeySequence('r')),
             self.view,
@@ -234,7 +241,7 @@ class MainWindow(QMainWindow):
             activated=self.window_pan_left,
         )
 
-        #Botão window right
+        #Botão right
         botaoRight = QPushButton("right", self)
         botaoRight.move(110, 390)
         botaoRight.resize(50, 30)
@@ -307,9 +314,8 @@ class MainWindow(QMainWindow):
         #Set noAnchor to GraphicsView, enabling the view to move
         self.view.setTransformationAnchor(QGraphicsView.ViewportAnchor(0)) #ponto de ancoragem
 
-    #tela para criar um novo objeto
     @QtCore.pyqtSlot()
-    def get_object_information(self):
+    def get_object_information(self): #tela para criar um novo objeto
         user_input = {}
         box = DialogBox()
         if box.exec():
@@ -330,31 +336,40 @@ class MainWindow(QMainWindow):
             self.add_on_display_file(new_object, info['nome'])
             self.draw_dispplay_file(new_object)
             #self.scene.addItem(new_object)
-        else:
+        elif info["opcao"] == "Wireframe":
             lados = (len(info.keys()) - 2) / 2  # Quantidade de lados = quantidade de chaves, menos 2(opcao e nome) divido por dois(cada lado tem x e y)
             list = []
-            vertices = [] #armazena uma lista de tuplas com os vertices
+            vertices = []
             for i in range(int(lados)):
                 point = QPointF(info[f'x{i+1}'], info[f'y{i+1}'])
                 list.append(point)
-                ponto = (info[f'x{i+1}'], info[f'y{i+1}'], 1)
+                ponto = [info[f'x{i+1}'], info[f'y{i+1}'], 1]
                 vertices.append(ponto)
-            new_object = Wireframe(list)
+            print("list: ", list)
+            print("vertices: ",vertices)
+            new_object = Wireframe(list, vertices)
             self.draw_dispplay_file(new_object)
             self.display_file.append(new_object)
             self.add_on_display_file(new_object, info['nome'])
             self.objects.append(new_object)
-    
+        
     def viewport_transformation(self, xw, yw):
         #print("viewport transformation")
         #xv = ((xw - self.Window.x_min) / (self.Window.x_max - self.Window.x_min)) * (self.xv_max - self.xv_min)
         #yv = (1- ((yw - self.Window.y_min) / (self.Window.y_max - self.Window.y_min)) ) * (self.yv_max - self.yv_min)
 
-        sx = (self.xv_max - self.xv_min) / (self.Window.x_max - self.Window.x_min)
-        sy = (self.yv_max - self.yv_min) / (self.Window.y_max - self.Window.y_min)
+        #formula usada antes no 1.1 e 1.2
+        # sx = (self.xv_max - self.xv_min) / (self.Window.x_max - self.Window.x_min)
+        # sy = (self.yv_max - self.yv_min) / (self.Window.y_max - self.Window.y_min)
 
-        xv = self.xv_min + (xw - self.Window.x_min) * sx
-        yv = self.yv_max - (self.yv_min + (yw - self.Window.y_min) * sy)
+        # xv = self.xv_min + (xw - self.Window.x_min) * sx
+        # yv = self.yv_max - (self.yv_min + (yw - self.Window.y_min) * sy)
+
+        sx = (self.xv_max - self.xv_min) / (self.window.x_max - self.window.x_min)
+        sy = (self.yv_max - self.yv_min) / (self.Window_mundo.y_max - self.Window_mundo.y_min)
+
+        xv = self.xv_min + (xw - self.Window_mundo.x_min) * sx
+        yv = self.yv_max - (self.yv_min + (yw - self.Window_mundo.y_min) * sy)
         return xv, yv
 
     def update_viewport(self):
@@ -365,14 +380,11 @@ class MainWindow(QMainWindow):
         ##print(f'lenVP = {len(self.onViewport)}, {self.onViewport}')
         ##print(f'lenDF = {len(self.display_file)}, {self.display_file}')
         for obj in self.display_file:
-            self.draw_dispplay_file(obj)
+            self.draw_dispplay_file(obj) 
         ##print(f'lenDF = {len(self.display_file)}, {self.display_file}')
-        self.view.centerOn(self.Window.x_max-self.Window.x_min, self.Window.y_max-self.Window.y_min)
-
+        self.view.centerOn(self.Window_mundo.x_max-self.Window_mundo.x_min, self.Window_mundo.y_max-self.Window_mundo.y_min)
+ 
     def new_zoom_in(self):
-        #antes
-        # self.Window.x_max = self.Window.x_max * (-self.zoomFactor)
-        # self.Window.y_max = self.Window.y_max * (-self.zoomFactor)
         zoom = 1.1
         scale_factor = 1.1
         
@@ -408,68 +420,32 @@ class MainWindow(QMainWindow):
         self.update_viewport()
         print("new zoom out")
 
-    def draw_dispplay_file(self, obj):
-        if type(obj) == Wireframe:
-            #print('------------start wireframe transformation---------------')
-            for l in obj.lines:
-                #print("antes: ", l.line().x1(), l.line().y1(), l.line().x2(), l.line().y2() )
-                new_x1, new_y1 = self.viewport_transformation(l.line().x1(), l.line().y1())
-                new_x2, new_y2 = self.viewport_transformation(l.line().x2(), l.line().y2())
-                pen = l.pen()
-                #print("depois: ", new_x1, new_y1, new_x2, new_y2)
-                new = Reta(new_x1, new_y1, new_x2, new_y2)
-                new.setPen(pen)
-                self.scene.addItem(new)
-                self.onViewport.append(new)
-                self.view.show()
-            #print('------------finish wireframe transformation---------------')
-        elif type(obj) == Reta:
-            print("antes: ", obj.line().x1(), obj.line().y1(), obj.line().x2(), obj.line().y2() )
-            new_x1, new_y1 = self.viewport_transformation(obj.line().x1(), obj.line().y1())
-            new_x2, new_y2 = self.viewport_transformation(obj.line().x2(), obj.line().y2())
-            pen = obj.pen()
-            print("depois: ", new_x1, new_y1, new_x2, new_y2)
-
-            new = Reta(new_x1, new_y1, new_x2, new_y2)
-            new.setPen(pen)
-            self.scene.addItem(new)
-            self.onViewport.append(new)
-            self.view.show()
-            print("end setline")
-        elif type(obj) == Ponto:
-            print('reach point')
-            print(f'antes : x = {obj.x()}, y = {obj.y()}')
-            new_x1, new_y1 = self.viewport_transformation(obj.x(), obj.y())
-            print(f'x = {new_x1}, y = {new_y1}')
-            new = Ponto(new_x1, new_y1)
-            self.scene.addItem(new)
-            self.onViewport.append(new)
-            self.view.show()
-            print("end setPoint")
 
     @QtCore.pyqtSlot()
     def pan_Left(self):
-        self.Window.x_min += self.panFactor
-        self.Window.x_max += self.panFactor
+        # self.Window.x_min += self.panFactor
+        # self.Window.x_max += self.panFactor
         self.update_viewport()
 
     @QtCore.pyqtSlot()
     def pan_Rigth(self):
-        self.Window.x_min -= self.panFactor
-        self.Window.x_max -= self.panFactor
+        # self.Window.x_min -= self.panFactor
+        # self.Window.x_max -= self.panFactor
         self.update_viewport()
 
     @QtCore.pyqtSlot()
     def pan_Up(self):
-        self.Window.y_min -= self.panFactor
-        self.Window.y_max -= self.panFactor
-        self.update_viewport()
+        pass
+        # self.Window.y_min -= self.panFactor
+        # self.Window.y_max -= self.panFactor
+        # self.update_viewport()
 
     @QtCore.pyqtSlot()
     def pan_Down(self):
-        self.Window.y_min += self.panFactor
-        self.Window.y_max += self.panFactor
-        self.update_viewport()
+        pass
+        # self.Window.y_min += self.panFactor
+        # self.Window.y_max += self.panFactor
+        # self.update_viewport()
 
     @QtCore.pyqtSlot()
     def changeColor_call(self):
@@ -659,6 +635,7 @@ class MainWindow(QMainWindow):
     def scale_call(self):
         self.dialog = QDialog(self)
         
+
         self.dialog.setWindowTitle("Informe o vetor de escala")
         layout = QVBoxLayout(self.dialog)
 
@@ -679,6 +656,7 @@ class MainWindow(QMainWindow):
             self.option_combo.addItem(item.name)
         layout.addWidget(self.option_combo)
 
+
         submit_button = QPushButton('Ok')
         layout.addWidget(submit_button)
         submit_button.clicked.connect(lambda: self.scale_object([float(xInput.text()), float(yInput.text())]))
@@ -692,13 +670,16 @@ class MainWindow(QMainWindow):
             if item.name == self.option_combo.currentText():
                 object = item
                 break
+        
         #Calcula centro do objeto
         object.calculateCenter()
+
         translate_toOrigin_matrix = self.get_translate_toOrigin_matrix(object.getCenter())
         scale_matrix = self.get_scale_matrix(vector)
         translate_back = self.get_translate_matrix(object.getCenter())
         final_matrix = np.matmul(translate_toOrigin_matrix, scale_matrix)
         final_matrix = np.matmul(final_matrix, translate_back)
+
 
         if type(object) == Wireframe:
             #Aplica matriz de escala a cada ponto do wireframe
@@ -744,7 +725,7 @@ class MainWindow(QMainWindow):
     @QtCore.pyqtSlot()
     def translate_call(self):
         self.dialog = QDialog(self)
-        
+
         self.dialog.setWindowTitle("Informe o vetor de translocação")
         layout = QVBoxLayout(self.dialog)
 
@@ -778,7 +759,7 @@ class MainWindow(QMainWindow):
             if item.name == self.option_combo.currentText():
                 object = item
                 break
-        
+
         translate_matrix = self.get_translate_matrix(vector)
         if type(object) == Wireframe:
             #Aplica matriz de tranlação a cada ponto do wireframe
@@ -834,90 +815,60 @@ class MainWindow(QMainWindow):
         return np.array(([[1, 0, 0],
                         [0, 1, 0],
                         [-vector[0], -vector[1], 1]]))
-    
-    def gerar_SCN(self):
-        #0. Crie ou mova a window onde deseja
-        self.Window = Window(100, 600, 100, 500) #Pegar coordenadas de onde se deseja criar o mundo e angulo?
-        #1. Translate Wc para origem(translade o mundo para o centro do objeto)
-        translate_matrix = self.get_translate_matrix([-self.Window.centerX, -self.Window.centerY])
-
-        #2. Determine Vup e angulo de Vup com Y
-        #Define Vup como aresta esquerda da window, e então rotaciona a aresta
-        self.Window.Vup = Reta(self.Window.x_min, self.Window.y_min, self.Window.x_min, self.Window.y_max)
-        degrees = 30.0
-        rotate_matrix = self.get_rotate_matrix(degrees)
-        scale_matrix = self.get_scale_matrix([self.Window.centerX, self.Window.centerY])
-        
-        final_matrix = np.matmul(translate_matrix, rotate_matrix)
-        final_matrix = np.matmul(final_matrix, scale_matrix)
-
-        #Precisa definir vetor e alinhar mundo com vetor
-        #3. Rotacione o mundo de forma a alinhar Vup com o eixo Y
-        for item in self.display_file:
-            if type(item) == Reta:
-                x1, y1, x2, y2 = item.line.x1(), item.line.y1(), item.line.x2(), item.line.y2()
-                old_l1 = np.array([x1, y1, 1])
-                old_l2 = np.array([x2, y2, 1])
-                new_l1 = np.matmul(old_l1, final_matrix)
-                new_l2 = np.matmul(old_l2, final_matrix)
-                item.x1N = new_l1[0]
-                item.y1N = new_l1[1]
-                item.x2N = new_l2[0]
-                item.y2N = new_l2[1]
-
-                #self.draw_dispplay_file(item) ???
-                #Deve-se desenhar o objeto na window com coordenadas normalizadas?
-
-            if type(item) == Wireframe:
-                for reta in item.lines:
-                    x1, y1, x2, y2 = reta.line.x1(), reta.line.y1(), reta.line.x2(), reta.line.y2()
-                    reta.x1N = x1
-                    reta.y1N = y1
-                    reta.x2N = x2
-                    reta.y2N = y2
-
-    def create_window_reference(self):
-        #chamei de reference, mas é a window
-        self.reference = Window(0,100,0,100)
-        self.draw_window()
+                
+    def create_window(self):
+        self.window_obj = Window(-1,1,-1,1)
+        #self.draw_window()
 
     def window_pan_right(self):
-        dx = self.reference.pan_right()
-        self.move_window(0, dx, 0)
+        self.window_obj.pan_right()
+        self.scn()
+        #self.update_viewport() isso quem chama é ... 
 
     def window_pan_left(self):
-        self.reference.pan_left()
-        self.move_window()
+        self.window_obj.pan_left()
+        self.scn()
 
     def window_pan_up(self):
-        self.reference.pan_up()
-        self.move_window()
+        self.window_obj.pan_up()
+        self.scn()
 
     def window_pan_down(self):
-        self.reference.pan_down()
-        self.move_window()
+        self.window_obj.pan_down()
+        self.scn()
 
     def rotate_window(self):
         degrees = self.get_degrees()    #positivos ou negativos - dai converte
-        self.move_window(degrees, 0, 0)
+        self.scn(degrees)
     
-    def move_window(self, degrees, dx, dy):
-        combined = self.reference.move(degrees, dx, dy)  #retorna a matriz composta
-        self.update_normalized_coord(combined)
+    def scn(self, degrees=0):
+        print("x_min: ", self.window.x_min)
+        print("x_max: ", self.window.x_max)
+        print("y_min: ", self.window.y_min)
+        print("y_max: ", self.window.y_max)
+        print(" ")
+        #combined = self.window.scn(degrees, 2000, 1500)  #retorna a matriz composta
+        #self.update_normalized_coord(combined)
 
     def update_normalized_coord(self, combined_matrix):
         for obj in self.display_file: 
             updated_vertices = []
             if isinstance(obj, Wireframe):
-                vertices = obj.vertices
+                vertices = obj.vertices #pega sempre as coordenadas originais
                 for vertex in vertices:
-                    v = np.append(vertex, 1.0)
-                    transformed_vertex = np.dot(combined_matrix, v)
-                    resultado = v * combined_matrix
-                    updated_vertices.append(resultado)
+                    vertex_homogeneous = np.array([vertex[0], vertex[1], vertex[2]])
+                    vertex_updated = np.dot(vertex_homogeneous, combined_matrix)
+                    updated_vertices.append(vertex_updated) #vai ter os vertices multiplicados
+                lista_retas = []
+                for i in range(len(updated_vertices)):
+                    x1, y1, x2, y2 = updated_vertices[i-1][0], updated_vertices[i-1][1], updated_vertices[i][0], updated_vertices[i][1]
+            #print(f' 2- {x1}, y1 = {y1}, x2 = {x2}, y2 = {y2}')
+                    lista_retas.append([x1, y1, x2, y2])
+                obj.normalized_vertices = lista_retas
+        self.update_viewport()
 
     def draw_window(self):
-        lista = self.reference.draw()
+        lista = self.window.draw()
         for obj in lista:
             self.draw_dispplay_file(obj)
     
@@ -929,3 +880,49 @@ class MainWindow(QMainWindow):
             QMessageBox.warning(self, 'Aviso', 'Digite um número válido!')
         self.input_graus.clear()
         return degrees
+
+    def save_project(self):
+        save_obj = FileObj()
+        for obj in self.display_file:
+            save_obj.save_file(obj)
+
+    def draw_dispplay_file(self, obj):
+        pass
+        # #antes de dsenhar faz a trasformada 
+        # if type(obj) == Wireframe:
+        #     #print('------------start wireframe transformation---------------')
+        #     for l in obj.normalized_vertices:
+        #         #print("antes: ", l.line().x1(), l.line().y1(), l.line().x2(), l.line().y2() )
+        #         new_x1, new_y1 = self.viewport_transformation(l[0], l[1])
+        #         new_x2, new_y2 = self.viewport_transformation(l[2], l[3])
+        #         #pen = l.pen() #??
+        #         #print("depois: ", new_x1, new_y1, new_x2, new_y2)
+        #         new = Reta(new_x1, new_y1, new_x2, new_y2)
+        #         #new.setPen(pen)
+        #         self.scene.addItem(new)
+        #         self.onViewport.append(new)
+        #         self.view.show()
+        #     #print('------------finish wireframe transformation---------------')
+        # elif type(obj) == Reta:
+        #     print("antes: ", obj.line().x1(), obj.line().y1(), obj.line().x2(), obj.line().y2() )
+        #     new_x1, new_y1 = self.viewport_transformation(obj.line().x1(), obj.line().y1())
+        #     new_x2, new_y2 = self.viewport_transformation(obj.line().x2(), obj.line().y2())
+        #     pen = obj.pen()
+        #     print("depois: ", new_x1, new_y1, new_x2, new_y2)
+
+        #     new = Reta(new_x1, new_y1, new_x2, new_y2)
+        #     new.setPen(pen)
+        #     self.scene.addItem(new)
+        #     self.onViewport.append(new)
+        #     self.view.show()
+        # elif type(obj) == Ponto:
+        #     print('reach point')
+        #     #print(f'antes : x = {obj.x()}, y = {obj.y()}')
+        #     new_x1, new_y1 = self.viewport_transformation(obj.x(), obj.y())
+        #     print(f'x = {new_x1}, y = {new_y1}')
+        #     new = Ponto(new_x1, new_y1)
+        #     self.scene.addItem(new)
+        #     self.onViewport.append(new)
+        #     self.view.show()
+        #     print("end setPoint")
+    
