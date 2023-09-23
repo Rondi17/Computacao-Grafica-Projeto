@@ -1,5 +1,7 @@
 from graphicsitem import *
-
+#para cada objeto no display file
+#tomando seu nome, seu tipo, seus vértices e suas arestas.
+#Chame o descritor para cada objeto de seu mundo.
 class FileObj:
     def __init__(self):
         pass

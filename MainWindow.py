@@ -17,6 +17,7 @@ class MainWindow(QMainWindow):
 
         self.display_file = []
         self.onViewport = []
+        #self.setGeometry(100, 100, 800, 600)
         self.title = "Sistema Gráfico Interativo 2D"
         self.left = 500
         self.top = 100
@@ -26,31 +27,18 @@ class MainWindow(QMainWindow):
         self.initUI()
 
     def objects_test(self):
-        pass
-        # triangulo = {'opcao': 'Wireframe', 'nome': 'triangulo', 'x1': 0, 'y1': 0, 'x2': 200, 'y2': 0, 'x3': 100, 'y3': 100}
-        # self.create_new_object(triangulo)
+        triangulo = {'opcao': 'Wireframe', 'nome': 'triangulo', 'x1': 0, 'y1': 0, 'x2': 200, 'y2': 0, 'x3': 100, 'y3': 100}
+        self.create_new_object(triangulo)
 
-        # new = {'opcao': 'Wireframe', 'nome': 'quadrado', 'x1': 200, 'y1': 300, 'x2': 500, 'y2': 300, 'x3': 500, 'y3': 500, 'x4': 200, 'y4': 500}
-        # self.create_new_object(new)
-        
-    def set_window_default_paramaters(self):
-        #window dimensions
-        #self.Window = Window(0, 600, 0, 500)
-        self.Window_mundo = Mundo(-800, 800, -800, 800)
-
-        #viewport dimensions
-        self.xv_min = 0
-        self.xv_max = 600
-        self.yv_min = 0
-        self.yv_max = 500
-
-        self.scale_acumulator = 1
-
+        new = {'opcao': 'Wireframe', 'nome': 'quadrado', 'x1': 200, 'y1': 300, 'x2': 500, 'y2': 300, 'x3': 500, 'y3': 500, 'x4': 200, 'y4': 500}
+        self.create_new_object(new)
 
     def initUI(self):
         self.wire_cord = []
-        self.zoomFactor = 1.1   #Fator utilizado para zoom_in e zoom_out na viewport
-        self.panFactor = 40.0   #Fator utilizado para pan na viewport
+        #Fator utilizado para zoom_in e zoom_out na viewport
+        self.zoomFactor = 1.1
+        #Fator utilizado para pan na viewport
+        self.panFactor = 40.0
         self.objects = []
         self.open_save = FileObj()
         self.setWindowTitle(self.title)
@@ -60,6 +48,7 @@ class MainWindow(QMainWindow):
         self.create_display_fileWidget()
         self.create_window()
         self.objects_test()
+        self.create_window()
         self.show()
 
     #Cria o ListWidget responsável por representar o displayfile
@@ -67,6 +56,10 @@ class MainWindow(QMainWindow):
         self.display_fileWidget = QListWidget(self)
         self.display_fileWidget.setGeometry(0, 0, 200, 200)
         self.display_fileWidget.show()
+
+    def create_window(self):
+        self.window_obj = Window(-1,1,-1,1)
+        self.scn()
 
     #Adiciona o objeto passado como parâmetro ao display file
     def add_on_display_file(self, object, nome):
@@ -89,205 +82,29 @@ class MainWindow(QMainWindow):
             context=QtCore.Qt.WidgetShortcut,
             activated=self.get_object_information,
         )
-        
         #Botão zoom_in
         botaoZoomIn = QPushButton("Zoom in", self)
         botaoZoomIn.move(100, 235)
         botaoZoomIn.resize(90, 30)
-        botaoZoomIn.clicked.connect(self.zoom_in)
+        botaoZoomIn.clicked.connect(self.new_zoom_in)
         #Shortcut = 'ctrl +'
         QtWidgets.QShortcut(
             QtGui.QKeySequence(QtGui.QKeySequence.ZoomIn),
             self.view,
             context=QtCore.Qt.WidgetShortcut,
-            activated=self.zoom_in,
+            activated=self.new_zoom_out,
         )
-        
         #Botão zoom_out
         botaoZoomOut = QPushButton("Zoom out", self)
         botaoZoomOut.move(100, 270)
         botaoZoomOut.resize(90, 30)
-        botaoZoomOut.clicked.connect(self.zoom_out)
+        botaoZoomOut.clicked.connect(self.new_zoom_out)
         #Shortcut = 'ctrl -'
         QtWidgets.QShortcut(
             QtGui.QKeySequence(QtGui.QKeySequence.ZoomOut),
             self.view,
             context=QtCore.Qt.WidgetShortcut,
-            activated=self.zoom_out,
-        )
-        
-        #Botão left
-        botaoLeft = QPushButton("←", self)
-        botaoLeft.move(10, 390)
-        botaoLeft.resize(50, 30)
-        botaoLeft.clicked.connect(self.pan_Left)
-        #Shortcut = '←'
-        QtWidgets.QShortcut(
-            QtGui.QKeySequence(QtGui.QKeySequence.MoveToPreviousChar),
-            self.view,
-            context=QtCore.Qt.WidgetShortcut,
-            activated=self.pan_Left,
-        )
-
-        #Botão Right
-        botaoRight = QPushButton("→", self)
-        botaoRight.move(110, 390)
-        botaoRight.resize(50, 30)
-        botaoRight.clicked.connect(self.pan_Rigth)
-        #Shortcut = '→'
-        QtWidgets.QShortcut(
-            QtGui.QKeySequence(QtGui.QKeySequence.MoveToNextChar),
-            self.view,
-            context=QtCore.Qt.WidgetShortcut,
-            activated=self.pan_Rigth,
-        )
-
-        #Botão Up
-        botaoUp = QPushButton("↑", self)
-        botaoUp.move(60, 356)
-        botaoUp.resize(50, 30)
-        botaoUp.clicked.connect(self.pan_Up)
-        #Shortcut = '↑'
-        QtWidgets.QShortcut(
-            QtGui.QKeySequence(QtGui.QKeySequence.MoveToPreviousLine),
-            self.view,
-            context=QtCore.Qt.WidgetShortcut,
-            activated=self.pan_Up,
-        )
-
-        #Botão Down
-        botaoDown = QPushButton("↓", self)
-        botaoDown.move(60, 390)
-        botaoDown.resize(50, 30)
-        botaoDown.clicked.connect(self.pan_Down)
-        #Shortcut = '↓'
-        QtWidgets.QShortcut(
-            QtGui.QKeySequence(QtGui.QKeySequence.MoveToNextLine),
-            self.view,
-            context=QtCore.Qt.WidgetShortcut,
-            activated=self.pan_Down,
-        )
-
-        #Botão Translate
-        botaoTranslate = QPushButton('Translate', self)
-        botaoTranslate.move(45, 500)
-        botaoTranslate.resize(90, 30)
-        botaoTranslate.clicked.connect(self.translate_call)
-        #Shortcut = 't' or 'T'
-        QtWidgets.QShortcut(
-            QtGui.QKeySequence(QtGui.QKeySequence('t')),
-            self.view,
-            context=QtCore.Qt.WidgetShortcut,
-            activated=self.translate_call,
-        )
-
-        #Botão Scale
-        botaoScale = QPushButton('Scale', self)
-        botaoScale.move(45, 530)
-        botaoScale.resize(90, 30)
-        botaoScale.clicked.connect(self.scale_call)
-        #Shortcut = 's' or 'S'
-        QtWidgets.QShortcut(
-            QtGui.QKeySequence(QtGui.QKeySequence('s')),
-            self.view,
-            context=QtCore.Qt.WidgetShortcut,
-            activated=self.scale_call,
-        )
-
-        #Botão Rotate
-        botaoRotate = QPushButton('Rotate', self)
-        botaoRotate.move(45, 560)
-        botaoRotate.resize(90, 30)
-        botaoRotate.clicked.connect(self.rotate_call)
-        #Shortcut = 's' or 'S'
-        QtWidgets.QShortcut(
-            QtGui.QKeySequence(QtGui.QKeySequence('r')),
-            self.view,
-            context=QtCore.Qt.WidgetShortcut,
-            activated=self.rotate_call,
-        )
-
-        #Botão Change Color
-        botaoChangeColor = QPushButton('Change Color', self)
-        botaoChangeColor.move(135, 530)
-        botaoChangeColor.resize(90, 30)
-        botaoChangeColor.clicked.connect(self.changeColor_call)
-        #Shortcut = 'c' or 'C'
-        QtWidgets.QShortcut(
-            QtGui.QKeySequence(QtGui.QKeySequence('c')),
-            self.view,
-            context=QtCore.Qt.WidgetShortcut,
-            activated=self.changeColor_call,
-        )
-        #novos
-        #Botão window left
-        botaoLeft = QPushButton("left", self)
-        botaoLeft.move(10, 390)
-        botaoLeft.resize(50, 30)
-        botaoLeft.clicked.connect(self.window_pan_left)
-        QtWidgets.QShortcut(
-            QtGui.QKeySequence(QtGui.QKeySequence('a')),
-            self.view,
-            context=QtCore.Qt.WidgetShortcut,
-            activated=self.window_pan_left,
-        )
-
-        #Botão window right
-        botaoRight = QPushButton("right", self)
-        botaoRight.move(110, 390)
-        botaoRight.resize(50, 30)
-        botaoRight.clicked.connect(self.window_pan_right)
-        QtWidgets.QShortcut(
-            QtGui.QKeySequence(QtGui.QKeySequence('d')),
-            self.view,
-            context=QtCore.Qt.WidgetShortcut,
-            activated=self.window_pan_right,
-        )
-
-        #Botão window up
-        botaoUp = QPushButton("up", self)
-        botaoUp.move(60, 360)
-        botaoUp.resize(50, 30)
-        botaoUp.clicked.connect(self.window_pan_up)
-        QtWidgets.QShortcut(
-            QtGui.QKeySequence(QtGui.QKeySequence('w')),
-            self.view,
-            context=QtCore.Qt.WidgetShortcut,
-            activated=self.window_pan_up,
-        )
-
-        #Botão window down
-        botaoDown = QPushButton("down", self)
-        botaoDown.move(60, 390)
-        botaoDown.resize(50, 30)
-        botaoDown.clicked.connect(self.window_pan_down)
-        QtWidgets.QShortcut(
-            QtGui.QKeySequence(QtGui.QKeySequence('s')),
-            self.view,
-            context=QtCore.Qt.WidgetShortcut,
-            activated=self.window_pan_down,
-        )
-        #Botão rotate window right
-        botaoTranslate = QPushButton('rotate right', self)
-        botaoTranslate.move(10, 420)
-        botaoTranslate.resize(90, 30)
-        botaoTranslate.clicked.connect(self.rotate_window)
-        QtWidgets.QShortcut(
-            #QtGui.QKeySequence(QtGui.QKeySequence('rw')),
-            self.view,
-            context=QtCore.Qt.WidgetShortcut,
-            activated=self.rotate_window,
-        )
-        #Botão rotate window right
-        botaoTranslate = QPushButton('rotate left', self)
-        botaoTranslate.move(110, 420)
-        botaoTranslate.resize(90, 30)
-        botaoTranslate.clicked.connect(self.rotate_window)
-        QtWidgets.QShortcut(
-            #QtGui.QKeySequence(QtGui.QKeySequence('rw')),
-            self.view,
-            context=QtCore.Qt.WidgetShortcut,
-            activated=self.rotate_window,
+            activated=self.new_zoom_out,
         )
         #Botão para abrir arquivo 
         botaoLeft = QPushButton("open", self)
@@ -301,7 +118,7 @@ class MainWindow(QMainWindow):
             context=QtCore.Qt.WidgetShortcut,
             activated=self.open_file,
         )
-        # salvar projeto em obj 
+        #Botão Right salvar projeto em obj 
         botaoRight = QPushButton("save", self)
         botaoRight.move(110, 330)
         botaoRight.resize(50, 30)
@@ -312,6 +129,97 @@ class MainWindow(QMainWindow):
             self.view,
             context=QtCore.Qt.WidgetShortcut,
             activated=self.save_project,
+        )
+        #Botão Translate
+        botaoTranslate = QPushButton('Translate', self)
+        botaoTranslate.move(45, 500)
+        botaoTranslate.resize(90, 30)
+        botaoTranslate.clicked.connect(self.translate_call)
+        #Shortcut = 't' or 'T'
+        QtWidgets.QShortcut(
+            QtGui.QKeySequence(QtGui.QKeySequence('t')),
+            self.view,
+            context=QtCore.Qt.WidgetShortcut,
+            activated=self.translate_call,
+        )
+        #Botão Scale
+        botaoScale = QPushButton('Scale', self)
+        botaoScale.move(45, 530)
+        botaoScale.resize(90, 30)
+        botaoScale.clicked.connect(self.scale_call)
+        #Shortcut = 's' or 'S'
+        QtWidgets.QShortcut(
+            QtGui.QKeySequence(QtGui.QKeySequence('s')),
+            self.view,
+            context=QtCore.Qt.WidgetShortcut,
+            activated=self.scale_call,
+        )
+        #Botão Rotate
+        botaoRotate = QPushButton('Rotate', self)
+        botaoRotate.move(45, 560)
+        botaoRotate.resize(90, 30)
+        botaoRotate.clicked.connect(self.rotate_call)
+        QtWidgets.QShortcut(
+            QtGui.QKeySequence(QtGui.QKeySequence('r')),
+            self.view,
+            context=QtCore.Qt.WidgetShortcut,
+            activated=self.rotate_call,
+        )
+        #Botão Change Color
+        botaoChangeColor = QPushButton('Change Color', self)
+        botaoChangeColor.move(135, 530)
+        botaoChangeColor.resize(90, 30)
+        botaoChangeColor.clicked.connect(self.changeColor_call)
+        #Shortcut = 'c' or 'C'
+        QtWidgets.QShortcut(
+            QtGui.QKeySequence(QtGui.QKeySequence('c')),
+            self.view,
+            context=QtCore.Qt.WidgetShortcut,
+            activated=self.changeColor_call,
+        )
+        #Botão window left
+        botaoLeft = QPushButton("←", self) 
+        botaoLeft.move(10, 390)
+        botaoLeft.resize(50, 30)
+        botaoLeft.clicked.connect(self.window_pan_left)
+        QtWidgets.QShortcut(
+            QtGui.QKeySequence(QtGui.QKeySequence('a')),
+            self.view,
+            context=QtCore.Qt.WidgetShortcut,
+            activated=self.window_pan_left,
+        )
+        #Botão right
+        botaoRight = QPushButton("→", self)
+        botaoRight.move(110, 390)
+        botaoRight.resize(50, 30)
+        botaoRight.clicked.connect(self.window_pan_right)
+        QtWidgets.QShortcut(
+            QtGui.QKeySequence(QtGui.QKeySequence('d')),
+            self.view,
+            context=QtCore.Qt.WidgetShortcut,
+            activated=self.window_pan_right,
+        )
+        #Botão window up
+        botaoUp = QPushButton("↑", self)
+        botaoUp.move(60, 360)
+        botaoUp.resize(50, 30)
+        botaoUp.clicked.connect(self.window_pan_up)
+        QtWidgets.QShortcut(
+            QtGui.QKeySequence(QtGui.QKeySequence('w')),
+            self.view,
+            context=QtCore.Qt.WidgetShortcut,
+            activated=self.window_pan_up,
+        )
+        #Botão window down
+        botaoDown = QPushButton("↓", self)
+        botaoDown.move(60, 390)
+        botaoDown.resize(50, 30)
+        botaoDown.clicked.connect(self.window_pan_down)
+        QtWidgets.QShortcut(
+            QtGui.QKeySequence(QtGui.QKeySequence('s')),
+            self.view,
+            context=QtCore.Qt.WidgetShortcut,
+            activated=self.window_pan_down,
         )
         #Botão rotate window right
         botaoTranslate = QPushButton('rotate right', self)
@@ -335,86 +243,28 @@ class MainWindow(QMainWindow):
             context=QtCore.Qt.WidgetShortcut,
             activated=self.rotate_window_left,
         )
-        label_file = QLabel("Arquivo: ", self)
-        label_file.move(20, 300)
-        self.file_name = QLineEdit(self)
-        self.file_name.move(70, 300)
-
         label_degrees = QLabel("Graus: ", self)
         label_degrees.move(20, 450)
         self.input_graus = QLineEdit(self)
         self.input_graus.move(60, 450)
 
-    def create_viewport(self):
-        self.scene = QGraphicsScene()
-        self.view = QGraphicsView(self.scene, self)
-        self.view.setGeometry(200,0,600,500)
-        #self.view.setAlignment(Qt.AlignLeft | Qt.AlignBottom)
-        #Set noAnchor to GraphicsView, enabling the view to move
-        self.view.setTransformationAnchor(QGraphicsView.ViewportAnchor(0)) #ponto de ancoragem
+        label_file = QLabel("Arquivo: ", self)
+        label_file.move(20, 300)
+        self.file_name = QLineEdit(self)
+        self.file_name.move(70, 300)
 
-    #tela para criar um novo objeto
     @QtCore.pyqtSlot()
-    def get_object_information(self):
+    def get_object_information(self): #tela para criar um novo objeto
         user_input = {}
         box = DialogBox()
         if box.exec():
             user_input = box.get_input()
             self.create_new_object(user_input)
 
-    def create_new_object(self, info):
-        if info['opcao'] == "Ponto":
-            new_object = Ponto(info['x'], info['y'])
-            print(f'on instantiantion {new_object}, {new_object.y()}')
-            self.display_file.append(new_object)
-            self.add_on_display_file(new_object, info['nome'])
-            self.draw_dispplay_file(new_object)
-        elif info["opcao"] == "Reta":
-            new_object = Reta(info['x1'], info['y1'], info['x2'], info['y2'])
-            self.display_file.append(new_object)
-            self.add_on_display_file(new_object, info['nome'])
-            self.draw_dispplay_file(new_object)
-        else:
-            lados = (len(info.keys()) - 2) / 2  # Quantidade de lados = quantidade de chaves, menos 2(opcao e nome) divido por dois(cada lado tem x e y)
-            list = []
-            vertices = [] #armazena uma lista de tuplas com os vertices
-            for i in range(int(lados)):
-                point = QPointF(info[f'x{i+1}'], info[f'y{i+1}'])
-                list.append(point)
-                ponto = (info[f'x{i+1}'], info[f'y{i+1}'], 1)
-                vertices.append(ponto)
-            new_object = Wireframe(list, vertices)
-            self.draw_dispplay_file(new_object)
-            self.display_file.append(new_object)
-            self.add_on_display_file(new_object, info['nome'])
-            self.objects.append(new_object)
-        self.scn()
-    
-    def viewport_transformation(self, xw, yw):
-        #formula usada antes no 1.1 e 1.2
-        # sx = (self.xv_max - self.xv_min) / (self.Window.x_max - self.Window.x_min)
-        # sy = (self.yv_max - self.yv_min) / (self.Window.y_max - self.Window.y_min)
-        # xv = self.xv_min + (xw - self.Window.x_min) * sx
-        # yv = self.yv_max - (self.yv_min + (yw - self.Window.y_min) * sy)
-
-        sx = (self.xv_max - self.xv_min) / (self.window_obj.x_max - self.window_obj.x_min)
-        sy = (self.yv_max - self.yv_min) / (self.window_obj.y_max - self.window_obj.y_min)
-        xv = self.xv_min + (xw - self.window_obj.x_min) * sx
-        yv = self.yv_max - (self.yv_min + (yw - self.window_obj.y_min) * sy)
-        return xv, yv
-
-    def update_viewport(self):
-        for obj in self.onViewport:
-            self.scene.removeItem(obj)
-        self.onViewport = []
-        for obj in self.display_file:
-            self.draw_dispplay_file(obj)
-        self.view.centerOn(self.Window.x_max-self.Window.x_min, self.Window.y_max-self.Window.y_min)
-
-    def zoom_in(self):
+    def new_zoom_in(self):
         zoom = 1.1
         scale_factor = 1.1
-        #print(f"Scale factor atual: {scale_factor}")
+        print(f"Scale factor atual: {scale_factor}")
         halfx = self.window_obj.x_max - self.window_obj.x_min
         halfy = self.window_obj.y_max - self.window_obj.y_min
         self.window_obj.x_min += halfx * (1 - 1 / scale_factor)
@@ -422,89 +272,27 @@ class MainWindow(QMainWindow):
         self.window_obj.x_max -= halfx * (1 - 1 / scale_factor)
         self.window_obj.y_max -= halfy * (1 - 1 / scale_factor)
         self.view.centerOn(halfx, halfy)
+        #self.Window.x_min += 60
+        #self.Window.y_min += 50
+        #self.Window.x_max -= 60
+        #self.Window.y_max -= 50
         self.update_viewport()
+        print("new zoom in")
 
-    def zoom_out(self):
+    def new_zoom_out(self):
         scale_factor = 1.1
-        #print(f"Scale factor atual: {scale_factor}")
-        halfx = self.Window.x_max - self.window_obj.x_min
-        halfy = self.Window.y_max - self.window_obj.y_min
+        print(f"Scale factor atual: {scale_factor}")
+        halfx = self.window_obj.x_max - self.window_obj.x_min
+        halfy = self.window_obj.y_max - self.window_obj.y_min
         self.window_obj.x_min -= halfx * (scale_factor - 1)
         self.window_obj.y_min -= halfy * (scale_factor - 1)
         self.window_obj.x_max += halfx * (scale_factor - 1)
         self.window_obj.y_max += halfy * (scale_factor - 1)
         self.view.centerOn(halfx, halfy)
+        # self.Window.x_min = self.padrao_x_min * scale_factor
+        # self.Window.y_min = self.padrao_y_min * scale_factor
         self.update_viewport()
-
-    def draw_dispplay_file(self, obj):
-        if type(obj) == Wireframe:
-            #print('------------start wireframe transformation---------------')
-            for line in obj.lines:
-                new_x1, new_y1 = self.viewport_transformation(line[0], line[1])
-                new_x2, new_y2 = self.viewport_transformation(line[2], line[3])
-                pen = line.pen()
-                new = Reta(new_x1, new_y1, new_x2, new_y2)
-                if obj.color != None:
-                    new.setPen(pen)
-                self.scene.addItem(new)
-                self.onViewport.append(new)
-                self.view.show()
-            #print('------------finish wireframe transformation---------------')
-        elif type(obj) == Reta:
-            print("antes: ", obj.line().x1(), obj.line().y1(), obj.line().x2(), obj.line().y2() )
-            new_x1, new_y1 = self.viewport_transformation(obj.line().x1(), obj.line().y1())
-            new_x2, new_y2 = self.viewport_transformation(obj.line().x2(), obj.line().y2())
-            pen = obj.pen()
-            print("depois: ", new_x1, new_y1, new_x2, new_y2)
-
-            new = Reta(new_x1, new_y1, new_x2, new_y2)
-            new.setPen(pen)
-            self.scene.addItem(new)
-            self.onViewport.append(new)
-            self.view.show()
-            print("end setline")
-        elif type(obj) == Ponto:
-            print('reach point')
-            print(f'antes : x = {obj.x()}, y = {obj.y()}')
-            new_x1, new_y1 = self.viewport_transformation(obj.x(), obj.y())
-            print(f'x = {new_x1}, y = {new_y1}')
-            new = Ponto(new_x1, new_y1)
-            self.scene.addItem(new)
-            self.onViewport.append(new)
-            self.view.show()
-            print("end setPoint")
-
-    @QtCore.pyqtSlot()
-    def pan_Left(self):
-        # self.Window.x_min += self.panFactor
-        # self.Window.x_max += self.panFactor
-        # self.update_viewport()
-        self.window_obj.pan_left()
-        self.scn()
-
-    @QtCore.pyqtSlot()
-    def pan_Rigth(self):
-        # self.Window.x_min -= self.panFactor
-        # self.Window.x_max -= self.panFactor
-        # self.update_viewport()
-        self.window_obj.pan_right()
-        self.scn()
-
-    @QtCore.pyqtSlot()
-    def pan_Up(self):
-        # self.Window.y_min -= self.panFactor
-        # self.Window.y_max -= self.panFactor
-        # self.update_viewport()
-        self.window_obj.pan_up()
-        self.scn()
-
-    @QtCore.pyqtSlot()
-    def pan_Down(self):
-        # self.Window.y_min += self.panFactor
-        # self.Window.y_max += self.panFactor
-        # self.update_viewport()
-        self.window_obj.pan_down()
-        self.scn()
+        print("new zoom out")
 
     @QtCore.pyqtSlot()
     def changeColor_call(self):
@@ -577,9 +365,9 @@ class MainWindow(QMainWindow):
         option = self.center_combo.currentText()
         if option == 'Ponto especifico':
             centerX, centerY = int(self.xInput.text()), int(self.yInput.text())
-            self.rotate_object(float(self.degreesInput.text()), object, centerX, centerY)
+            self.rotate_object(object, float(self.degreesInput.text()), centerX, centerY)
         elif option == 'Centro do mundo':
-            self.rotate_object(float(self.degreesInput.text()), object, 0, 0)
+            self.rotate_object(object, float(self.degreesInput.text()), 0, 0)
         else:
             object.centerX = 0
             object.centerY = 0
@@ -626,7 +414,6 @@ class MainWindow(QMainWindow):
 
     def rotate_object(self, object, degrees, centerX, centerY):
         self.dialog.accept()
-        
         final_matrix = self.get_final_rotate_matrix(degrees, centerX, centerY)
 
         if type(object) == Reta:
@@ -646,10 +433,12 @@ class MainWindow(QMainWindow):
             for vertice in object.vertices:
                 x = vertice[0]
                 y = vertice[1]
+                print(f'Points before: x = {x}, y = {y}')
                 old_points = np.array([x, y, 1])
                 new_points = np.matmul(old_points, final_matrix)
-                vertice[0] = new_points[0]
-                vertice[1] = new_points[1]            
+                vertice[0] =new_points[0]
+                vertice[1] =new_points[1]
+                print(f'Points after: x = {x}, y = {y}')
             #Atualiza linhas do wireframe com base nos pontos atualizados
             for i in range(len(object.vertices)):
                 x1, y1, x2, y2 = object.vertices[i-1][0], object.vertices[i-1][1], object.vertices[i][0], object.vertices[i][1]
@@ -673,6 +462,7 @@ class MainWindow(QMainWindow):
     def scale_call(self):
         self.dialog = QDialog(self)
         
+
         self.dialog.setWindowTitle("Informe o vetor de escala")
         layout = QVBoxLayout(self.dialog)
 
@@ -693,6 +483,7 @@ class MainWindow(QMainWindow):
             self.option_combo.addItem(item.name)
         layout.addWidget(self.option_combo)
 
+
         submit_button = QPushButton('Ok')
         layout.addWidget(submit_button)
         submit_button.clicked.connect(lambda: self.scale_object([float(xInput.text()), float(yInput.text())]))
@@ -706,8 +497,7 @@ class MainWindow(QMainWindow):
             if item.name == self.option_combo.currentText():
                 object = item
                 break
-        #Calcula centro do objeto
-        object.calculateCenter()
+        object.calculateCenter() #Calcula centro do objeto
         translate_toOrigin_matrix = self.get_translate_toOrigin_matrix(object.getCenter())
         scale_matrix = self.get_scale_matrix(vector)
         translate_back = self.get_translate_matrix(object.getCenter())
@@ -719,16 +509,20 @@ class MainWindow(QMainWindow):
             for vertice in object.vertices:
                 x = vertice[0]
                 y = vertice[1]
+                # print(f'Points before: x = {x}, y = {y}')
                 old_points = np.array([x, y, 1])
                 new_points = np.matmul(old_points, final_matrix)
                 vertice[0] = new_points[0]
                 vertice[1] = new_points[1]
+                # print(f'Points after: x = {x}, y = {y}')
             
             #Atualiza linhas do wireframe com base nos pontos atualizados
-            for i in range(len(object.lines)):
+            for i in range(len(object.vertices)):
                 x1, y1, x2, y2 = object.vertices[i-1][0], object.vertices[i-1][1], object.vertices[i][0], object.vertices[i][1]
+                #print(f' 2- {x1}, y1 = {y1}, x2 = {x2}, y2 = {y2}')
                 object.normalized_vertices.append([x1, y1, x2, y2])
                 self.scn()
+
         elif type(object) == Reta:
             x1, y1, x2, y2 = object.line().x1(), object.line().y1(), object.line().x2(), object.line().y2()
             old_l1 = np.array([x1, y1, 1])
@@ -751,7 +545,7 @@ class MainWindow(QMainWindow):
     @QtCore.pyqtSlot()
     def translate_call(self):
         self.dialog = QDialog(self)
-        
+
         self.dialog.setWindowTitle("Informe o vetor de translocação")
         layout = QVBoxLayout(self.dialog)
 
@@ -785,17 +579,19 @@ class MainWindow(QMainWindow):
             if item.name == self.option_combo.currentText():
                 object = item
                 break
-        
+
         translate_matrix = self.get_translate_matrix(vector)
         if type(object) == Wireframe:
             #Aplica matriz de tranlação a cada ponto do wireframe
             for vertice in object.vertices:
                 x = vertice[0]
                 y = vertice[1]
+                print(f'Points before: x = {x}, y = {y}')
                 old_points = np.array([x, y, 1])
                 new_points = np.matmul(old_points, translate_matrix)
                 vertice[0] = new_points[0]
                 vertice[1] = new_points[1]
+                print(f'Points after: x = {x}, y = {y}')
 
             #Atualiza linhas do wireframe com base nos pontos atualizados
             for i in range(len(object.vertices)):
@@ -834,67 +630,94 @@ class MainWindow(QMainWindow):
         return np.array(([[1, 0, 0],
                         [0, 1, 0],
                         [-vector[0], -vector[1], 1]]))
-    
-    def gerar_SCN(self):
-        #0. Crie ou mova a window onde deseja
-        self.Window = Window(100, 600, 100, 500) #Pegar coordenadas de onde se deseja criar o mundo e angulo?
-        #1. Translate Wc para origem(translade o mundo para o centro do objeto)
-        translate_matrix = self.get_translate_matrix([-self.Window.centerX, -self.Window.centerY])
-
-        #2. Determine Vup e angulo de Vup com Y
-        #Define Vup como aresta esquerda da window, e então rotaciona a aresta
-        self.Window.Vup = Reta(self.Window.x_min, self.Window.y_min, self.Window.x_min, self.Window.y_max)
-        degrees = 30.0
-        rotate_matrix = self.get_rotate_matrix(degrees)
-        scale_matrix = self.get_scale_matrix([self.Window.centerX, self.Window.centerY])
-        
-        final_matrix = np.matmul(translate_matrix, rotate_matrix)
-        final_matrix = np.matmul(final_matrix, scale_matrix)
-
-        #Precisa definir vetor e alinhar mundo com vetor
-        #3. Rotacione o mundo de forma a alinhar Vup com o eixo Y
-        for item in self.display_file:
-            if type(item) == Reta:
-                x1, y1, x2, y2 = item.line.x1(), item.line.y1(), item.line.x2(), item.line.y2()
-                old_l1 = np.array([x1, y1, 1])
-                old_l2 = np.array([x2, y2, 1])
-                new_l1 = np.matmul(old_l1, final_matrix)
-                new_l2 = np.matmul(old_l2, final_matrix)
-                item.x1N = new_l1[0]
-                item.y1N = new_l1[1]
-                item.x2N = new_l2[0]
-                item.y2N = new_l2[1]
-
-                #self.draw_dispplay_file(item) ???
-                #Deve-se desenhar o objeto na window com coordenadas normalizadas?
-
-            if type(item) == Wireframe:
-                for reta in item.lines:
-                    x1, y1, x2, y2 = reta.line.x1(), reta.line.y1(), reta.line.x2(), reta.line.y2()
-                    reta.x1N = x1
-                    reta.y1N = y1
-                    reta.x2N = x2
-                    reta.y2N = y2
-
-    def create_window(self):
-        self.window_obj = Window(-1,1,-1,1)
-        self.scn()
 
     def window_pan_right(self):
-        dx = self.reference.pan_right()
-        self.move_window(0, dx, 0)
+        self.window_obj.pan_right()
+        self.scn()
+        #self.update_viewport() isso quem chama é ... 
 
     def window_pan_left(self):
-        self.reference.pan_left()
-        self.move_window()
+        self.window_obj.pan_left()
+        self.scn()
 
     def window_pan_up(self):
-        self.reference.pan_up()
-        self.move_window()
+        self.window_obj.pan_up()
+        self.scn()
 
     def window_pan_down(self):
-        self.reference.pan_down()
-        self.move_window()
+        self.window_obj.pan_down()
+        self.scn()
+    
+    def create_new_object(self, info):
+        print("info: ", info)
+        if info['opcao'] == "Ponto":
+            new_object = Ponto(info['x'], info['y'])
+            print(f'on instantiantion {new_object}, {new_object.y()}')
+            self.display_file.append(new_object)
+            self.add_on_display_file(new_object, info['nome'])
+            self.draw_dispplay_file(new_object)
+        elif info["opcao"] == "Reta":
+            new_object = Reta(info['x1'], info['y1'], info['x2'], info['y2'])
+            self.display_file.append(new_object)
+            self.add_on_display_file(new_object, info['nome'])
+            self.draw_dispplay_file(new_object)
+        elif info["opcao"] == "Wireframe":
+            lados = (len(info.keys()) - 2) / 2  # Quantidade de lados = quantidade de chaves, menos 2(opcao e nome) divido por dois(cada lado tem x e y)
+            list = []
+            vertices = []
+            for i in range(int(lados)):
+                point = QPointF(info[f'x{i+1}'], info[f'y{i+1}'])
+                list.append(point)
+                ponto = [info[f'x{i+1}'], info[f'y{i+1}'], 1]
+                vertices.append(ponto)
+            print("list: ", list)
+            print("vertices: ",vertices)
+            new_object = Wireframe(list, vertices)
+            #self.draw_dispplay_file(new_object)
+            self.display_file.append(new_object)
+            self.add_on_display_file(new_object, info['nome'])
+            self.objects.append(new_object)
+        self.scn() 
+
+    def set_window_default_paramaters(self):
+        #window dimensions
+        self.Window_mundo = Mundo(-800, 800, -800, 800)
+        #viewport dimensions
+        self.xv_min = 0
+        self.xv_max = 600
+        self.yv_min = 0
+        self.yv_max = 500
+
+        self.scale_acumulator = 1
+
+    def create_viewport(self):
+        self.scene = QGraphicsScene()
+        self.view = QGraphicsView(self.scene, self)
+        self.view.setGeometry(200,0,600,500)
+        #self.view.setAlignment(Qt.AlignLeft | Qt.AlignBottom)
+        #Set noAnchor to GraphicsView, enabling the view to move
+        self.view.setTransformationAnchor(QGraphicsView.ViewportAnchor(0)) #ponto de ancoragem
+
+    def viewport_transformation(self, xw, yw):
+        #formula usada antes no 1.1 e 1.2
+        # sx = (self.xv_max - self.xv_min) / (self.Window.x_max - self.Window.x_min)
+        # sy = (self.yv_max - self.yv_min) / (self.Window.y_max - self.Window.y_min)
+        # xv = self.xv_min + (xw - self.Window.x_min) * sx
+        # yv = self.yv_max - (self.yv_min + (yw - self.Window.y_min) * sy)
+
+        sx = (self.xv_max - self.xv_min) / (self.window_obj.x_max - self.window_obj.x_min)
+        sy = (self.yv_max - self.yv_min) / (self.window_obj.y_max - self.window_obj.y_min)
+        xv = self.xv_min + (xw - self.window_obj.x_min) * sx
+        yv = self.yv_max - (self.yv_min + (yw - self.window_obj.y_min) * sy)
+        return xv, yv
+   
+    def update_viewport(self):
+        for obj in self.onViewport:
+            self.scene.removeItem(obj)
+        self.onViewport = []
+        for obj in self.display_file:
+            self.draw_dispplay_file(obj) 
+        self.view.centerOn(self.Window_mundo.x_max-self.Window_mundo.x_min, self.Window_mundo.y_max-self.Window_mundo.y_min)
 
     def rotate_window_right(self):
         degrees = self.get_degrees()
@@ -905,30 +728,69 @@ class MainWindow(QMainWindow):
         degrees = self.get_degrees()
         self.window_obj.degrees -= degrees
         self.scn()
-    
-    def move_window(self, degrees, dx, dy):
-        combined = self.reference.move(degrees, dx, dy)  #retorna a matriz composta
-        self.update_normalized_coord(combined)
 
-    def update_normalized_coord(self, combined_matrix):
+    def scn(self, degrees=0):
+        combined = self.window_obj.scn(self.Window_mundo.centerX, self.Window_mundo.centerY)  #retorna a matriz composta
+        self.update_normalized_coordinates(combined)
+
+    def update_normalized_coordinates(self, combined_matrix): #multiplica vertices * matriz composta
         for obj in self.display_file: 
-            updated_vertices = []
             if isinstance(obj, Wireframe):
-                vertices = obj.vertices
+                updated_vertices = []
+                vertices = obj.vertices #pega sempre as coordenadas originais
                 for vertex in vertices:
-                    v = np.append(vertex, 1.0)
-                    transformed_vertex = np.dot(combined_matrix, v)
-                    resultado = v * combined_matrix
-                    updated_vertices.append(resultado)
-    
-    def get_degrees(self):
-        degrees_text = self.input_graus.text()
-        try:
-            degrees = float(degrees_text)
-        except ValueError:
-            QMessageBox.warning(self, 'Aviso', 'Digite um número válido!')
-        self.input_graus.clear()
-        return degrees
+                    vertex_homogeneous = np.array([vertex[0], vertex[1], vertex[2]])
+                    vertex_updated = np.matmul(vertex_homogeneous, combined_matrix)
+                    #vertex_updated = np.dot(vertex_homogeneous, combined_matrix)
+                    updated_vertices.append(vertex_updated)
+                lista_retas = []
+                for i in range(len(updated_vertices)):
+                    x1, y1, x2, y2 = updated_vertices[i-1][0], updated_vertices[i-1][1], updated_vertices[i][0], updated_vertices[i][1]
+                    lista_retas.append([x1, y1, x2, y2])
+                obj.normalized_vertices = lista_retas
+        self.update_viewport()
+
+    def draw_dispplay_file(self, obj):
+
+        if type(obj) == Wireframe:
+            #print('------------start wireframe transformation---------------')
+            for line in obj.normalized_vertices:
+                #print("antes: ", l.line().x1(), l.line().y1(), l.line().x2(), l.line().y2() )
+                new_x1, new_y1 = self.viewport_transformation(line[0], line[1])
+                new_x2, new_y2 = self.viewport_transformation(line[2], line[3])
+                #pen = l.pen() #??
+                #print("depois: ", new_x1, new_y1, new_x2, new_y2)
+                new = Reta(new_x1, new_y1, new_x2, new_y2)
+                if obj.color != None:
+                    new.setPen(obj.color)
+                #new.setPen(pen)
+                self.scene.addItem(new)
+                self.onViewport.append(new)
+                self.view.show()
+            #print('------------finish wireframe transformation---------------')
+        elif type(obj) == Reta:
+            print("antes: ", obj.line().x1(), obj.line().y1(), obj.line().x2(), obj.line().y2() )
+            new_x1, new_y1 = self.viewport_transformation(obj.line().x1(), obj.line().y1())
+            new_x2, new_y2 = self.viewport_transformation(obj.line().x2(), obj.line().y2())
+            pen = obj.pen()
+            print("depois: ", new_x1, new_y1, new_x2, new_y2)
+
+            new = Reta(new_x1, new_y1, new_x2, new_y2)
+            new.setPen(pen)
+            self.scene.addItem(new)
+            self.onViewport.append(new)
+            self.view.show()
+        elif type(obj) == Ponto:
+            print('reach point')
+            #print(f'antes : x = {obj.x()}, y = {obj.y()}')
+            new_x1, new_y1 = self.viewport_transformation(obj.x(), obj.y())
+            print(f'x = {new_x1}, y = {new_y1}')
+            new = Ponto(new_x1, new_y1)
+            self.scene.addItem(new)
+            self.onViewport.append(new)
+            self.view.show()
+            print("end setPoint")
+
     
     def get_degrees(self):
         degrees_text = self.input_graus.text()
@@ -967,23 +829,120 @@ class MainWindow(QMainWindow):
                 new["nome"] = dic["name"]
                 self.create_new_object(new)
 
-    def scn(self, degrees=0):
-        combined = self.window_obj.scn(self.Window_mundo.centerX, self.Window_mundo.centerY)  #retorna a matriz composta
-        self.update_normalized_coordinates(combined)
+    def point_clipping(self, point:Ponto):
+        if self.window_obj.x_min <= point.x() <= self.window_obj.x_max:
+            if self.window_obj.y_min <= point.y() <= self.window_obj.y_max:
+                #must clip
+                pass
 
-    def update_normalized_coordinates(self, combined_matrix): #multiplica vertices * matriz composta
-        for obj in self.display_file: 
-            if isinstance(obj, Wireframe):
-                updated_vertices = []
-                vertices = obj.vertices #pega sempre as coordenadas originais
-                for vertex in vertices:
-                    vertex_homogeneous = np.array([vertex[0], vertex[1], vertex[2]])
-                    vertex_updated = np.matmul(vertex_homogeneous, combined_matrix)
-                    #vertex_updated = np.dot(vertex_homogeneous, combined_matrix)
-                    updated_vertices.append(vertex_updated)
-                lista_retas = []
-                for i in range(len(updated_vertices)):
-                    x1, y1, x2, y2 = updated_vertices[i-1][0], updated_vertices[i-1][1], updated_vertices[i][0], updated_vertices[i][1]
-                    lista_retas.append([x1, y1, x2, y2])
-                obj.normalized_vertices = lista_retas
-        self.update_viewport()
+    def line_clipping(self, line:Reta):
+        for item in self.display_file:
+            if isinstance(item, Reta):
+                pass
+
+
+    def define_region_codes(self):
+        top_left = 9
+        top = 8
+        top_right = 10
+
+        left = 1
+        center = 0
+        right = 2
+
+        bottom_left = 5
+        bottom = 4
+        bottom_right = 3
+
+        for item in self.display_file:
+            if isinstance(item, Reta):
+                x1, y1, x2, y2 = item.line().x1(), item.line().y1(), item.line().x2(), item.line().y2()
+                xmin, ymin, xmax, ymax = self.window_obj.x_min, self.window_obj.y_min, self.window_obj.x_max, self.window_obj.y_max
+                x, y = x1, y1
+                item.RC = ['', ''] #empty list with strings to be overwritten
+                for _ in range(2):
+                    if _ == 1: 
+                        x, y = x2, y2
+                    if x < xmin: #left
+                        if y < ymin: #bottom
+                            item.RC[_] = bottom_left
+                        elif y > ymax: #top
+                            item.RC[_] = top_left
+                        else: # just left
+                            item.RC[_] = left
+                    
+                    elif x > xmax: #right
+                        if y < ymin: #bottom
+                            item.RC[_] = bottom_right
+                        elif y > ymax: #top
+                            item.RC[_] = top_right
+                        else: # just right
+                            item.RC[_] = right
+                    
+                    else: #middle
+                        if y < ymin: #bottom
+                            item.RC[_] = bottom
+                        elif y > ymax: #top
+                            item.RC[_] = top
+                        else: # center
+                            item.RC[_] = center
+        
+                if item.RC[0] == item.RC[1] == 0: 
+                    if item.RC[0] != item.RC[1]: #parcialmente visivel:
+                        m = (y2 - y1) / (x2 - x1)
+                        item.intersectionPoints = []
+                        intersection = item.RC[0] | item.RC[1] # logical OR
+                        intersection = bin(intersection)[2:] # Get binary representation without '0b'
+                        intersection += '0' * (4 - len(intersection)) # complete intersection with zeros on the left until reach 4 bits
+
+                        if intersection[3] == '1': #Left intersection
+                            x = xmin
+                            y = m(xmin - x1) + y1
+                            if ymin < y < ymax:
+                                item.clipped = True
+                                item.x1I = x
+                                item.y1I = y
+                        
+                        if intersection[2] == '1': # Right intersection
+                            x = xmax
+                            y = m(xmax - x1) + y1
+                            if ymin < y < ymax :
+                                item.clipped = True
+                                item.x2I = x
+                                item.y2I = y
+                                
+                        
+                        if intersection[0] == '1': # Top intersection
+                            y = ymax
+                            x = x1 + (1/m)*(ymax - y1)
+                            if xmin < x < ymax:
+                                item.clipped = True
+                                if item.line().x1() > item.line().x2():
+                                    item.x1I = x
+                                    item.y1I = y
+                                else: 
+                                    item.x2I = x
+                                    item.y2I = y
+
+                        
+                        if intersection[1] == '1': #Bottom intersection
+                            y = ymin
+                            x = x1 + (1/m)*(ymin - y1)
+                            if xmin < x < ymax:
+                                item.clipped = True
+                                if item.line().x1() < item.line().x2():
+                                    item.x1I = x
+                                    item.y1I = y
+                                else: 
+                                    item.x2I = x
+                                    item.y2I = y
+                        
+                    else:#completamente contida na janela
+                        pass
+                elif item.RC[0] & item.RC[1] != 0: #Completamente fora da janela
+                    pass
+
+                    
+
+
+

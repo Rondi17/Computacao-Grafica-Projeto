@@ -15,8 +15,6 @@ class DialogBox(QDialog):
         self.buttonBox.accepted.connect(self.accept)
         self.buttonBox.rejected.connect(self.reject)
 
-               
-
         self.layout = QVBoxLayout()
         self.init_box()
 
@@ -33,7 +31,7 @@ class DialogBox(QDialog):
         self.layout.addWidget(self.option_label)
 
         self.option_combo = QComboBox()  # Combo box para opcoes
-        self.option_combo.addItems(["Ponto", "Reta", "Wireframe"])
+        self.option_combo.addItems(["Wireframe", "Ponto", "Reta"])
         self.layout.addWidget(self.option_combo)
 
         self.option_combo.currentIndexChanged.connect(self.option_changed)

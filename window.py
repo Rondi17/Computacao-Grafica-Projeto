@@ -2,7 +2,6 @@ from graphicsitem import *
 import numpy as np
 import math
 
-
 class Mundo():
     def __init__(self, x_min, x_max, y_min, y_max):
         self.x_min = x_min
@@ -12,16 +11,17 @@ class Mundo():
         self.centerX = self.x_max - self.x_min
         self.centerY = self.y_max - self.y_min
 
+
 class Window():
     def __init__(self, x_min, x_max, y_min, y_max):
         self.x_min = x_min
-        self.padrao_x_min = x_min
         self.x_max = x_max
-        self.padrao_x_max = x_max
-
         self.y_min = y_min
-        self.padrao_y_min = y_min
         self.y_max = y_max
+
+        self.padrao_x_min = x_min
+        self.padrao_x_max = x_max
+        self.padrao_y_min = y_min
         self.padrao_y_max = y_max
         
         self.centerX = self.x_max - self.x_min
@@ -29,8 +29,14 @@ class Window():
         self.Vup : Reta
         self.degrees = 0
         self.pan_factor = 0.1
+    
+    def print(self):
+        print("centrox:", self.centerX)
+        print("centroy: ", self.centerY)
 
     def scn(self, width, height):
+        dx = self.x_min
+        dy = self.y_min
 
         translate_matrix = np.array([[1, 0, 0],
                         [0, 1, 0],
