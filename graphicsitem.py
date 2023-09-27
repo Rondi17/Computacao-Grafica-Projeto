@@ -14,6 +14,7 @@ class Ponto(QGraphicsEllipseItem):
         super().__init__(x, y, 1, 1)
         self.setBrush(Qt.black)
         self.name : str
+        self.clipped : False
         
 
 class Reta(QGraphicsLineItem):
@@ -34,8 +35,8 @@ class Reta(QGraphicsLineItem):
         #intersection points
         self.x1I = x1
         self.y1I = y1
-        self.x2I : x2
-        self.y2I : y2
+        self.x2I = x2
+        self.y2I = y2
 
     def calculateCenter(self):
         self.centerX = (self.line().x1() + self.line().x2()) / 2

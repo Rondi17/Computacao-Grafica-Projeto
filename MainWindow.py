@@ -30,8 +30,17 @@ class MainWindow(QMainWindow):
         triangulo = {'opcao': 'Wireframe', 'nome': 'triangulo', 'x1': 0, 'y1': 0, 'x2': 200, 'y2': 0, 'x3': 100, 'y3': 100}
         self.create_new_object(triangulo)
 
-        new = {'opcao': 'Wireframe', 'nome': 'quadrado', 'x1': 200, 'y1': 300, 'x2': 500, 'y2': 300, 'x3': 500, 'y3': 500, 'x4': 200, 'y4': 500}
-        self.create_new_object(new)
+        quadrado = {'opcao': 'Wireframe', 'nome': 'quadrado', 'x1': 200, 'y1': 300, 'x2': 500, 'y2': 300, 'x3': 500, 'y3': 500, 'x4': 200, 'y4': 500}
+        self.create_new_object(quadrado)
+
+        outside_triangle = {'opcao': 'Wireframe', 'nome': 'outside_triangle', 'x1': -1000, 'y1': -1000, 'x2': 2000, 'y2': -1000, 'x3': 500, 'y3': 1000}
+        self.create_new_object(outside_triangle)
+
+        window_limit = {'opcao': 'Wireframe', 'nome': 'window_limit', 'x1': self.Window_mundo.x_min+100, 'y1': self.Window_mundo.y_min+100,
+                                                                  'x2': self.Window_mundo.x_min+100, 'y2': self.Window_mundo.y_max-100,
+                                                                  'x3': self.Window_mundo.x_max-100, 'y3': self.Window_mundo.y_max-100,
+                                                                  'x4': self.Window_mundo.x_max-100, 'y4': self.Window_mundo.y_min+100}
+        self.create_new_object(window_limit)
 
     def initUI(self):
         self.wire_cord = []
@@ -734,15 +743,25 @@ class MainWindow(QMainWindow):
         self.update_normalized_coordinates(combined)
 
     def update_normalized_coordinates(self, combined_matrix): #multiplica vertices * matriz composta
+        self.define_region_codes()
         for obj in self.display_file: 
-            if isinstance(obj, Wireframe):
-                updated_vertices = []
-                vertices = obj.vertices #pega sempre as coordenadas originais
-                for vertex in vertices:
-                    vertex_homogeneous = np.array([vertex[0], vertex[1], vertex[2]])
-                    vertex_updated = np.matmul(vertex_homogeneous, combined_matrix)
-                    #vertex_updated = np.dot(vertex_homogeneous, combined_matrix)
-                    updated_vertices.append(vertex_updated)
+            updated_vertices = []
+            if isinstance(obj, Wireframe):    
+                for reta in obj.lines:
+                    vertice1 = np.array([reta.x1I, reta.y1I, 1])
+                    vertice2 = np.array([reta.x2I, reta.y2I, 1])
+                    vertice1_updated = np.matmul(vertice1, combined_matrix)
+                    vertice2_updated = np.matmul(vertice2, combined_matrix)
+                    updated_vertices.append(vertice1_updated)
+                    updated_vertices.append(vertice2_updated)
+
+                '''else:
+                    vertices = obj.vertices #pega sempre as coordenadas originais
+                    for vertex in vertices:
+                        vertex_homogeneous = np.array([vertex[0], vertex[1], vertex[2]])
+                        vertex_updated = np.matmul(vertex_homogeneous, combined_matrix)
+                        #vertex_updated = np.dot(vertex_homogeneous, combined_matrix)
+                        updated_vertices.append(vertex_updated)'''
                 lista_retas = []
                 for i in range(len(updated_vertices)):
                     x1, y1, x2, y2 = updated_vertices[i-1][0], updated_vertices[i-1][1], updated_vertices[i][0], updated_vertices[i][1]
@@ -832,16 +851,19 @@ class MainWindow(QMainWindow):
     def point_clipping(self, point:Ponto):
         if self.window_obj.x_min <= point.x() <= self.window_obj.x_max:
             if self.window_obj.y_min <= point.y() <= self.window_obj.y_max:
-                #must clip
-                pass
-
-    def line_clipping(self, line:Reta):
-        for item in self.display_file:
-            if isinstance(item, Reta):
-                pass
-
+                point.clipped = True
 
     def define_region_codes(self):
+        for item in self.display_file:
+            if isinstance(item, Wireframe):
+                for reta in item.lines:
+                    self.defineIntersection(reta)
+            elif isinstance(item, Reta):
+                self.defineIntersection(item)
+            elif isinstance(item, Ponto):
+                self.point_clipping(item)
+            
+    def defineIntersection(self, item):
         top_left = 9
         top = 8
         top_right = 10
@@ -854,10 +876,10 @@ class MainWindow(QMainWindow):
         bottom = 4
         bottom_right = 3
 
-        for item in self.display_file:
-            if isinstance(item, Reta):
+        if isinstance(item, Reta):
                 x1, y1, x2, y2 = item.line().x1(), item.line().y1(), item.line().x2(), item.line().y2()
-                xmin, ymin, xmax, ymax = self.window_obj.x_min, self.window_obj.y_min, self.window_obj.x_max, self.window_obj.y_max
+                #print(f'x1 = {x1}, y1 = {y1}, x2 = {x2}, y2 = {y2}')
+                xmin, ymin, xmax, ymax = self.Window_mundo.x_min +100, self.Window_mundo.y_min+100, self.Window_mundo.x_max - 100, self.Window_mundo.y_max -100
                 x, y = x1, y1
                 item.RC = ['', ''] #empty list with strings to be overwritten
                 for _ in range(2):
@@ -886,30 +908,36 @@ class MainWindow(QMainWindow):
                             item.RC[_] = top
                         else: # center
                             item.RC[_] = center
-        
-                if item.RC[0] == item.RC[1] == 0: 
-                    if item.RC[0] != item.RC[1]: #parcialmente visivel:
+                if item.RC[0] == item.RC[1] == 0: #totalmente na janela 
+                    item.clipped = False
+                elif item.RC[0] != item.RC[1]: #parcialmente visivel:
+                    if item.RC[0] & item.RC[1] == 0:
+                        print(f'x1 = {x1}, y1 = {y1}, x2 = {x2}, y2 = {y2}')
+                        print(f'xmin = {xmin}, ymin = {ymin}, xmax = {xmax}, ymax = {ymax}')
+                        print(f'item.RC[0] = {item.RC[0]}, item.RC[1] = {item.RC[1]}')
                         m = (y2 - y1) / (x2 - x1)
-                        item.intersectionPoints = []
                         intersection = item.RC[0] | item.RC[1] # logical OR
                         intersection = bin(intersection)[2:] # Get binary representation without '0b'
                         intersection += '0' * (4 - len(intersection)) # complete intersection with zeros on the left until reach 4 bits
+                        print(f'Variable intersection  = {intersection}')
 
                         if intersection[3] == '1': #Left intersection
                             x = xmin
-                            y = m(xmin - x1) + y1
+                            y = m*(xmin - x1) + y1
                             if ymin < y < ymax:
                                 item.clipped = True
                                 item.x1I = x
                                 item.y1I = y
+                                print(f'left intersection, x = {x}, y = {y}')
                         
                         if intersection[2] == '1': # Right intersection
                             x = xmax
-                            y = m(xmax - x1) + y1
+                            y = m*(xmax - x1) + y1
                             if ymin < y < ymax :
                                 item.clipped = True
                                 item.x2I = x
                                 item.y2I = y
+                                print(f'right intersection, x = {x}, y = {y}')
                                 
                         
                         if intersection[0] == '1': # Top intersection
@@ -923,6 +951,7 @@ class MainWindow(QMainWindow):
                                 else: 
                                     item.x2I = x
                                     item.y2I = y
+                                print(f'top intersection, x = {x}, y = {y}')
 
                         
                         if intersection[1] == '1': #Bottom intersection
@@ -936,11 +965,10 @@ class MainWindow(QMainWindow):
                                 else: 
                                     item.x2I = x
                                     item.y2I = y
+                                print(f'bottom intersection, x = {x}, y = {y}')
                         
-                    else:#completamente contida na janela
-                        pass
                 elif item.RC[0] & item.RC[1] != 0: #Completamente fora da janela
-                    pass
+                    item.clipped = True
 
                     
 
