@@ -33,7 +33,7 @@ class MainWindow(QMainWindow):
         quadrado = {'opcao': 'Wireframe', 'nome': 'quadrado', 'x1': 200, 'y1': 300, 'x2': 500, 'y2': 300, 'x3': 500, 'y3': 500, 'x4': 200, 'y4': 500}
         self.create_new_object(quadrado)
 
-        outside_triangle = {'opcao': 'Wireframe', 'nome': 'outside_triangle', 'x1': -1000, 'y1': -1000, 'x2': 2000, 'y2': -1000, 'x3': 500, 'y3': 1000}
+        outside_triangle = {'opcao': 'Wireframe', 'nome': 'outside_triangle', 'x1': -1000, 'y1': -1000, 'x2': -1500, 'y2': 1200, 'x3': 500, 'y3': 1000}
         self.create_new_object(outside_triangle)
 
         window_limit = {'opcao': 'Wireframe', 'nome': 'window_limit', 'x1': self.Window_mundo.x_min+100, 'y1': self.Window_mundo.y_min+100,
@@ -606,7 +606,7 @@ class MainWindow(QMainWindow):
             for i in range(len(object.vertices)):
                 x1, y1, x2, y2 = object.vertices[i-1][0], object.vertices[i-1][1], object.vertices[i][0], object.vertices[i][1]
                 object.normalized_vertices.append([x1, y1, x2, y2])
-                self.scn()
+            self.scn()
         
         elif type(object) == Reta:
             x1, y1, x2, y2 = object.line().x1(), object.line().y1(), object.line().x2(), object.line().y2()
@@ -686,7 +686,7 @@ class MainWindow(QMainWindow):
             self.display_file.append(new_object)
             self.add_on_display_file(new_object, info['nome'])
             self.objects.append(new_object)
-        self.scn() 
+        #self.scn() 
 
     def set_window_default_paramaters(self):
         #window dimensions
@@ -740,20 +740,29 @@ class MainWindow(QMainWindow):
 
     def scn(self, degrees=0):
         combined = self.window_obj.scn(self.Window_mundo.centerX, self.Window_mundo.centerY)  #retorna a matriz composta
+        print('call update_normalized_coordinates')
         self.update_normalized_coordinates(combined)
 
     def update_normalized_coordinates(self, combined_matrix): #multiplica vertices * matriz composta
+        print('call define_region_codes')
         self.define_region_codes()
-        for obj in self.display_file: 
+        for obj in self.display_file:
+            print(f'obj name = {obj.name}')
             updated_vertices = []
             if isinstance(obj, Wireframe):    
                 for reta in obj.lines:
-                    vertice1 = np.array([reta.x1I, reta.y1I, 1])
-                    vertice2 = np.array([reta.x2I, reta.y2I, 1])
-                    vertice1_updated = np.matmul(vertice1, combined_matrix)
-                    vertice2_updated = np.matmul(vertice2, combined_matrix)
-                    updated_vertices.append(vertice1_updated)
-                    updated_vertices.append(vertice2_updated)
+                    if reta.showing:
+                        print(f'showing = {reta.showing}')
+                        print(f'x1 = {reta.line().x1()}, y1 = {reta.line().y1()}, x2 = {reta.line().x2()}, y2 = {reta.line().y2()}')
+                        print(f'x1I = {reta.x1I}, y1I = {reta.y1I}, x2I = {reta.x2I}, y2I = {reta.y2I}')
+                        vertice1 = np.array([reta.x1I, reta.y1I, 1])
+                        vertice2 = np.array([reta.x2I, reta.y2I, 1])
+                        vertice1_updated = np.matmul(vertice1, combined_matrix)
+                        vertice2_updated = np.matmul(vertice2, combined_matrix)
+                        updated_vertices.append(vertice1_updated)
+                        updated_vertices.append(vertice2_updated)
+                        print(f'vertice1 = {vertice1_updated}')
+                        print(f'vertice2 = {vertice2_updated}')
 
                 '''else:
                     vertices = obj.vertices #pega sempre as coordenadas originais
@@ -767,14 +776,16 @@ class MainWindow(QMainWindow):
                     x1, y1, x2, y2 = updated_vertices[i-1][0], updated_vertices[i-1][1], updated_vertices[i][0], updated_vertices[i][1]
                     lista_retas.append([x1, y1, x2, y2])
                 obj.normalized_vertices = lista_retas
+                print(lista_retas)
         self.update_viewport()
 
     def draw_dispplay_file(self, obj):
 
         if type(obj) == Wireframe:
+            #print(f'obj_drawing = {obj.name}')
             #print('------------start wireframe transformation---------------')
             for line in obj.normalized_vertices:
-                #print("antes: ", l.line().x1(), l.line().y1(), l.line().x2(), l.line().y2() )
+                #print(f'line = {line}')
                 new_x1, new_y1 = self.viewport_transformation(line[0], line[1])
                 new_x2, new_y2 = self.viewport_transformation(line[2], line[3])
                 #pen = l.pen() #??
@@ -857,6 +868,7 @@ class MainWindow(QMainWindow):
         for item in self.display_file:
             if isinstance(item, Wireframe):
                 for reta in item.lines:
+                    #   print(f'----------------defining region codes of {item.name}-------------------------')
                     self.defineIntersection(reta)
             elif isinstance(item, Reta):
                 self.defineIntersection(item)
@@ -874,7 +886,7 @@ class MainWindow(QMainWindow):
 
         bottom_left = 5
         bottom = 4
-        bottom_right = 3
+        bottom_right = 6
 
         if isinstance(item, Reta):
                 x1, y1, x2, y2 = item.line().x1(), item.line().y1(), item.line().x2(), item.line().y2()
@@ -908,44 +920,55 @@ class MainWindow(QMainWindow):
                             item.RC[_] = top
                         else: # center
                             item.RC[_] = center
+                #print(f'item.RC[0] = {item.RC[0]}, item.RC[1] = {item.RC[1]}')
                 if item.RC[0] == item.RC[1] == 0: #totalmente na janela 
                     item.clipped = False
+                    item.showing = True
                 elif item.RC[0] != item.RC[1]: #parcialmente visivel:
                     if item.RC[0] & item.RC[1] == 0:
-                        print(f'x1 = {x1}, y1 = {y1}, x2 = {x2}, y2 = {y2}')
-                        print(f'xmin = {xmin}, ymin = {ymin}, xmax = {xmax}, ymax = {ymax}')
-                        print(f'item.RC[0] = {item.RC[0]}, item.RC[1] = {item.RC[1]}')
+                        #print(f'x1 = {x1}, y1 = {y1}, x2 = {x2}, y2 = {y2}')
+                        #print(f'xmin = {xmin}, ymin = {ymin}, xmax = {xmax}, ymax = {ymax}')
                         m = (y2 - y1) / (x2 - x1)
                         intersection = item.RC[0] | item.RC[1] # logical OR
                         intersection = bin(intersection)[2:] # Get binary representation without '0b'
                         intersection += '0' * (4 - len(intersection)) # complete intersection with zeros on the left until reach 4 bits
-                        print(f'Variable intersection  = {intersection}')
+                        #print(f'Variable intersection  = {intersection}')
 
                         if intersection[3] == '1': #Left intersection
                             x = xmin
                             y = m*(xmin - x1) + y1
                             if ymin < y < ymax:
                                 item.clipped = True
-                                item.x1I = x
-                                item.y1I = y
+                                item.showing = True
                                 print(f'left intersection, x = {x}, y = {y}')
-                        
+                                if x1 < x2:
+                                    item.x1I = x
+                                    item.y1I = y
+                                else:
+                                    item.x2I = x
+                                    item.y2I = y
                         if intersection[2] == '1': # Right intersection
                             x = xmax
                             y = m*(xmax - x1) + y1
                             if ymin < y < ymax :
                                 item.clipped = True
-                                item.x2I = x
-                                item.y2I = y
+                                item.showing = True
+                                if x1 > x2:
+                                    item.x1I = x
+                                    item.y1I = y
+                                else:
+                                    item.x2I = x
+                                    item.y2I = y
                                 print(f'right intersection, x = {x}, y = {y}')
                                 
                         
                         if intersection[0] == '1': # Top intersection
                             y = ymax
                             x = x1 + (1/m)*(ymax - y1)
-                            if xmin < x < ymax:
+                            if xmin < x < xmax:
                                 item.clipped = True
-                                if item.line().x1() > item.line().x2():
+                                item.showing = True
+                                if  y1> y2:
                                     item.x1I = x
                                     item.y1I = y
                                 else: 
@@ -957,9 +980,10 @@ class MainWindow(QMainWindow):
                         if intersection[1] == '1': #Bottom intersection
                             y = ymin
                             x = x1 + (1/m)*(ymin - y1)
-                            if xmin < x < ymax:
+                            if xmin < x < xmax:
                                 item.clipped = True
-                                if item.line().x1() < item.line().x2():
+                                item.showing = True
+                                if y1 < y2:
                                     item.x1I = x
                                     item.y1I = y
                                 else: 
@@ -969,6 +993,8 @@ class MainWindow(QMainWindow):
                         
                 elif item.RC[0] & item.RC[1] != 0: #Completamente fora da janela
                     item.clipped = True
+                    item.showing = False
+                    print(f'reta not showing')
 
                     
 

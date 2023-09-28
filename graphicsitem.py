@@ -31,7 +31,8 @@ class Reta(QGraphicsLineItem):
         self.RC : list
         self.coeficienteLinear : float
 
-        self.clipped : False
+        self.clipped = True
+        self.showing = False
         #intersection points
         self.x1I = x1
         self.y1I = y1
@@ -64,6 +65,7 @@ class Wireframe():
         self.name :str
         self.centerX = 0.0
         self.centerY = 0.0
+
 
     def criar(self, lista, vertices):
         for i in range(len(lista)):
