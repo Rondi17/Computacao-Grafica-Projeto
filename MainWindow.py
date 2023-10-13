@@ -27,20 +27,30 @@ class MainWindow(QMainWindow):
         self.initUI()
 
     def objects_test(self):
-        triangulo = {'opcao': 'Wireframe', 'nome': 'triangulo', 'x1': 0, 'y1': 0, 'x2': 200, 'y2': 0, 'x3': 100, 'y3': 100}
-        self.create_new_object(triangulo)
+        # triangulo = {'opcao': 'Wireframe', 'nome': 'triangulo', 'x1': 0, 'y1': 0, 'x2': 200, 'y2': 0, 'x3': 100, 'y3': 100}
+        # self.create_new_object(triangulo)
 
-        quadrado = {'opcao': 'Wireframe', 'nome': 'quadrado', 'x1': 200, 'y1': 300, 'x2': 500, 'y2': 300, 'x3': 500, 'y3': 500, 'x4': 200, 'y4': 500}
-        self.create_new_object(quadrado)
+        # quadrado = {'opcao': 'Wireframe', 'nome': 'quadrado', 'x1': 200, 'y1': 300, 'x2': 500, 'y2': 300, 'x3': 500, 'y3': 500, 'x4': 200, 'y4': 500}
+        # self.create_new_object(quadrado)
 
-        outside_triangle = {'opcao': 'Wireframe', 'nome': 'outside_triangle', 'x1': -1000, 'y1': -1000, 'x2': -1500, 'y2': 1200, 'x3': 500, 'y3': 1000}
-        self.create_new_object(outside_triangle)
+        # outside_triangle = {'opcao': 'Wireframe', 'nome': 'outside_triangle', 'x1': -1000, 'y1': -1000, 'x2': -1500, 'y2': 1200, 'x3': 500, 'y3': 1000}
+        # self.create_new_object(outside_triangle)
 
         window_limit = {'opcao': 'Wireframe', 'nome': 'window_limit', 'x1': self.Window_mundo.x_min+100, 'y1': self.Window_mundo.y_min+100,
                                                                   'x2': self.Window_mundo.x_min+100, 'y2': self.Window_mundo.y_max-100,
                                                                   'x3': self.Window_mundo.x_max-100, 'y3': self.Window_mundo.y_max-100,
                                                                   'x4': self.Window_mundo.x_max-100, 'y4': self.Window_mundo.y_min+100}
         self.create_new_object(window_limit)
+
+        # curve = {'opcao': 'Curva', 'nome': 'lal', 'num_curvas': 1, 'p10': '1,1', 'p40': '2,2', 'r10': '3,3', 'r40': '4,4'}
+        curve = {'opcao': 'Curva', 'nome': 'minha-curva', 'num_curvas': 3, 
+                 'p10': '100,100', 'p40': '300,200', 'r10': '150,0', 'r40': '0,100', 
+                 'p11': '300,200', 'p41': '500,300', 'r11': '100,50', 'r41': '50,200', 
+                 'p12': '500,300', 'p42': '600,400', 'r12': '50,150', 'r42': '0,100'}
+        self.create_new_object(curve)
+
+        curve_continue = {'opcao': 'Curva', 'nome': 'curva-continuidade4', 'num_curvas': 4, 'p10': '0,200', 'p40': '400,200', 'r10': '100,0', 'r40': '100,0', 'p11': '400,200', 'p41': '600,600', 'r11': '100,0', 'r41': '100,400', 'p12': '600,600', 'p42': '1000,200', 'r12': '100,400', 'r42': '100,0', 'p13': '1000,200', 'p43': '1200,200', 'r13': '100,0', 'r43': '100,0'}
+        self.create_new_object(curve_continue)
 
     def initUI(self):
         self.wire_cord = []
@@ -674,19 +684,30 @@ class MainWindow(QMainWindow):
             lados = (len(info.keys()) - 2) / 2  # Quantidade de lados = quantidade de chaves, menos 2(opcao e nome) divido por dois(cada lado tem x e y)
             list = []
             vertices = []
+
             for i in range(int(lados)):
                 point = QPointF(info[f'x{i+1}'], info[f'y{i+1}'])
                 list.append(point)
                 ponto = [info[f'x{i+1}'], info[f'y{i+1}'], 1]
                 vertices.append(ponto)
-            print("list: ", list)
-            print("vertices: ",vertices)
             new_object = Wireframe(list, vertices)
             #self.draw_dispplay_file(new_object)
             self.display_file.append(new_object)
             self.add_on_display_file(new_object, info['nome'])
             self.objects.append(new_object)
-        #self.scn() 
+
+        elif info["opcao"] == "Curva":
+            curves = []
+            #info:  {'opcao': 'Curva', 'nome': 'my_curve', 'p1': [100, 100], 'p4': [400, 400], 'r1': [200, 0], 'r4': [0, 200]}
+            for i in range((info["num_curvas"])):
+                curve = [info[f'p1{i}'], info[f'p4{i}'], info[f'r1{i}'], info[f'r4{i}']]
+                curves.append(curve)
+            lista_de_inteiros = [[tuple(map(int, item.split(','))) for item in sublista] for sublista in curves]
+            print("lista-de-inteiros: ", lista_de_inteiros)
+            new_object = HermiteCurve(lista_de_inteiros)
+            self.display_file.append(new_object)
+            self.add_on_display_file(new_object, info['nome'])
+        self.scn()
 
     def set_window_default_paramaters(self):
         #window dimensions
@@ -708,12 +729,6 @@ class MainWindow(QMainWindow):
         self.view.setTransformationAnchor(QGraphicsView.ViewportAnchor(0)) #ponto de ancoragem
 
     def viewport_transformation(self, xw, yw):
-        #formula usada antes no 1.1 e 1.2
-        # sx = (self.xv_max - self.xv_min) / (self.Window.x_max - self.Window.x_min)
-        # sy = (self.yv_max - self.yv_min) / (self.Window.y_max - self.Window.y_min)
-        # xv = self.xv_min + (xw - self.Window.x_min) * sx
-        # yv = self.yv_max - (self.yv_min + (yw - self.Window.y_min) * sy)
-
         sx = (self.xv_max - self.xv_min) / (self.window_obj.x_max - self.window_obj.x_min)
         sy = (self.yv_max - self.yv_min) / (self.window_obj.y_max - self.window_obj.y_min)
         xv = self.xv_min + (xw - self.window_obj.x_min) * sx
@@ -740,47 +755,50 @@ class MainWindow(QMainWindow):
 
     def scn(self, degrees=0):
         combined = self.window_obj.scn(self.Window_mundo.centerX, self.Window_mundo.centerY)  #retorna a matriz composta
-        print('call update_normalized_coordinates')
+        #print('call update_normalized_coordinates')
         self.update_normalized_coordinates(combined)
 
     def update_normalized_coordinates(self, combined_matrix): #multiplica vertices * matriz composta
-        print('call define_region_codes')
         self.define_region_codes()
         for obj in self.display_file:
             print(f'obj name = {obj.name}')
-            updated_vertices = []
-            if isinstance(obj, Wireframe):    
+            if isinstance(obj, Wireframe):
+                updated_vertices = []    
                 for reta in obj.lines:
                     if reta.showing:
-                        print(f'showing = {reta.showing}')
-                        print(f'x1 = {reta.line().x1()}, y1 = {reta.line().y1()}, x2 = {reta.line().x2()}, y2 = {reta.line().y2()}')
-                        print(f'x1I = {reta.x1I}, y1I = {reta.y1I}, x2I = {reta.x2I}, y2I = {reta.y2I}')
+                        # print(f'showing = {reta.showing}')
+                        # print(f'x1 = {reta.line().x1()}, y1 = {reta.line().y1()}, x2 = {reta.line().x2()}, y2 = {reta.line().y2()}')
+                        # print(f'x1I = {reta.x1I}, y1I = {reta.y1I}, x2I = {reta.x2I}, y2I = {reta.y2I}')
                         vertice1 = np.array([reta.x1I, reta.y1I, 1])
                         vertice2 = np.array([reta.x2I, reta.y2I, 1])
                         vertice1_updated = np.matmul(vertice1, combined_matrix)
                         vertice2_updated = np.matmul(vertice2, combined_matrix)
                         updated_vertices.append(vertice1_updated)
                         updated_vertices.append(vertice2_updated)
-                        print(f'vertice1 = {vertice1_updated}')
-                        print(f'vertice2 = {vertice2_updated}')
-
-                '''else:
-                    vertices = obj.vertices #pega sempre as coordenadas originais
-                    for vertex in vertices:
-                        vertex_homogeneous = np.array([vertex[0], vertex[1], vertex[2]])
-                        vertex_updated = np.matmul(vertex_homogeneous, combined_matrix)
-                        #vertex_updated = np.dot(vertex_homogeneous, combined_matrix)
-                        updated_vertices.append(vertex_updated)'''
                 lista_retas = []
                 for i in range(len(updated_vertices)):
                     x1, y1, x2, y2 = updated_vertices[i-1][0], updated_vertices[i-1][1], updated_vertices[i][0], updated_vertices[i][1]
                     lista_retas.append([x1, y1, x2, y2])
                 obj.normalized_vertices = lista_retas
-                print(lista_retas)
+
+            elif isinstance(obj, HermiteCurve):
+                #obj.points tem os pontos da curva
+                up_vertices = []
+                for sublist in obj.curve_points:
+                #for list in obj.curve_clipping:
+                    for list in sublist:
+                        vertice = np.array([list[0], list[1], 1])
+                        vertice_up = np.matmul(vertice, combined_matrix)
+                        up_vertices.append(vertice_up)
+                retas = []
+                for i in range(len(up_vertices) - 1):
+                    x1,y1,x2,y2 = up_vertices[i][0], up_vertices[i][1], up_vertices[i+1][0], up_vertices[i+1][1]
+                    retas.append([x1, y1, x2, y2])
+                obj.lines_curve = retas
+                #print("obj-norma: ", obj.normalized_vertices) #ate aqui funfa
         self.update_viewport()
 
     def draw_dispplay_file(self, obj):
-
         if type(obj) == Wireframe:
             #print(f'obj_drawing = {obj.name}')
             #print('------------start wireframe transformation---------------')
@@ -799,11 +817,11 @@ class MainWindow(QMainWindow):
                 self.view.show()
             #print('------------finish wireframe transformation---------------')
         elif type(obj) == Reta:
-            print("antes: ", obj.line().x1(), obj.line().y1(), obj.line().x2(), obj.line().y2() )
+            #print("antes: ", obj.line().x1(), obj.line().y1(), obj.line().x2(), obj.line().y2() )
             new_x1, new_y1 = self.viewport_transformation(obj.line().x1(), obj.line().y1())
             new_x2, new_y2 = self.viewport_transformation(obj.line().x2(), obj.line().y2())
             pen = obj.pen()
-            print("depois: ", new_x1, new_y1, new_x2, new_y2)
+            #print("depois: ", new_x1, new_y1, new_x2, new_y2)
 
             new = Reta(new_x1, new_y1, new_x2, new_y2)
             new.setPen(pen)
@@ -820,7 +838,18 @@ class MainWindow(QMainWindow):
             self.onViewport.append(new)
             self.view.show()
             print("end setPoint")
-
+        elif type(obj) == HermiteCurve:
+            for line in obj.lines_curve:
+                #print("antes: ",line[0], line[1], line[2], line[3])
+                new_x1, new_y1 = self.viewport_transformation(line[0], line[1])
+                new_x2, new_y2 = self.viewport_transformation(line[2], line[3])
+                #print("depois: ", new_x1, new_y1, new_x2, new_y2)
+                new = Reta(new_x1, new_y1, new_x2, new_y2)
+                if obj.color != None:
+                    new.setPen(obj.color)
+                self.scene.addItem(new)
+                self.onViewport.append(new)
+                self.view.show()
     
     def get_degrees(self):
         degrees_text = self.input_graus.text()
@@ -864,17 +893,20 @@ class MainWindow(QMainWindow):
             if self.window_obj.y_min <= point.y() <= self.window_obj.y_max:
                 point.clipped = True
 
+    #funcao que chama o metodo clipping dos objetos
     def define_region_codes(self):
         for item in self.display_file:
             if isinstance(item, Wireframe):
                 for reta in item.lines:
-                    #   print(f'----------------defining region codes of {item.name}-------------------------')
                     self.defineIntersection(reta)
             elif isinstance(item, Reta):
                 self.defineIntersection(item)
             elif isinstance(item, Ponto):
                 self.point_clipping(item)
-            
+            elif isinstance(item, HermiteCurve):
+                xmin, ymin, xmax, ymax = self.Window_mundo.x_min +100, self.Window_mundo.y_min+100, self.Window_mundo.x_max - 100, self.Window_mundo.y_max -100
+                item.clipping(xmin, ymin, xmax, ymax)
+
     def defineIntersection(self, item):
         top_left = 9
         top = 8
