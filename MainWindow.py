@@ -14,7 +14,6 @@ import math
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
-
         self.display_file = []
         self.onViewport = []
         #self.setGeometry(100, 100, 800, 600)
@@ -27,30 +26,27 @@ class MainWindow(QMainWindow):
         self.initUI()
 
     def objects_test(self):
-        # triangulo = {'opcao': 'Wireframe', 'nome': 'triangulo', 'x1': 0, 'y1': 0, 'x2': 200, 'y2': 0, 'x3': 100, 'y3': 100}
-        # self.create_new_object(triangulo)
+        triangulo = {'opcao': 'Wireframe', 'nome': 'triangulo', 'x1': 0, 'y1': 0, 'x2': 200, 'y2': 0, 'x3': 100, 'y3': 100}
+        #self.create_new_object(triangulo)
 
-        # quadrado = {'opcao': 'Wireframe', 'nome': 'quadrado', 'x1': 200, 'y1': 300, 'x2': 500, 'y2': 300, 'x3': 500, 'y3': 500, 'x4': 200, 'y4': 500}
-        # self.create_new_object(quadrado)
+        quadrado = {'opcao': 'Wireframe', 'nome': 'quadrado', 'x1': 200, 'y1': 300, 'x2': 500, 'y2': 300, 'x3': 500, 'y3': 500, 'x4': 200, 'y4': 500}
+        #self.create_new_object(quadrado)
 
-        # outside_triangle = {'opcao': 'Wireframe', 'nome': 'outside_triangle', 'x1': -1000, 'y1': -1000, 'x2': -1500, 'y2': 1200, 'x3': 500, 'y3': 1000}
-        # self.create_new_object(outside_triangle)
+        outside_triangle = {'opcao': 'Wireframe', 'nome': 'outside_triangle', 'x1': -1000, 'y1': -1000, 'x2': -1500, 'y2': 1200, 'x3': 500, 'y3': 1000}
+        #self.create_new_object(outside_triangle)
 
         window_limit = {'opcao': 'Wireframe', 'nome': 'window_limit', 'x1': self.Window_mundo.x_min+100, 'y1': self.Window_mundo.y_min+100,
                                                                   'x2': self.Window_mundo.x_min+100, 'y2': self.Window_mundo.y_max-100,
                                                                   'x3': self.Window_mundo.x_max-100, 'y3': self.Window_mundo.y_max-100,
                                                                   'x4': self.Window_mundo.x_max-100, 'y4': self.Window_mundo.y_min+100}
-        self.create_new_object(window_limit)
+        #self.create_new_object(window_limit)
 
         # curve = {'opcao': 'Curva', 'nome': 'lal', 'num_curvas': 1, 'p10': '1,1', 'p40': '2,2', 'r10': '3,3', 'r40': '4,4'}
-        curve = {'opcao': 'Curva', 'nome': 'minha-curva', 'num_curvas': 3, 
-                 'p10': '100,100', 'p40': '300,200', 'r10': '150,0', 'r40': '0,100', 
-                 'p11': '300,200', 'p41': '500,300', 'r11': '100,50', 'r41': '50,200', 
-                 'p12': '500,300', 'p42': '600,400', 'r12': '50,150', 'r42': '0,100'}
-        self.create_new_object(curve)
+        curve = {'opcao': 'Curva', 'nome': 'horizontal-curve', 'num_curvas': 3, 'p10': '-1200,0', 'p40': '-400,0', 'r10': '0,50', 'r40': '0,-50', 'p11': '-400,0', 'p41': '400,0', 'r11': '0,50', 'r41': '0,-50', 'p12': '400,0', 'p42': '1200,0', 'r12': '0,50', 'r42': '0,-50'}
+        #self.create_new_object(curve)
 
         curve_continue = {'opcao': 'Curva', 'nome': 'curva-continuidade4', 'num_curvas': 4, 'p10': '0,200', 'p40': '400,200', 'r10': '100,0', 'r40': '100,0', 'p11': '400,200', 'p41': '600,600', 'r11': '100,0', 'r41': '100,400', 'p12': '600,600', 'p42': '1000,200', 'r12': '100,400', 'r42': '100,0', 'p13': '1000,200', 'p43': '1200,200', 'r13': '100,0', 'r43': '100,0'}
-        self.create_new_object(curve_continue)
+        #self.create_new_object(curve_continue)
 
     def initUI(self):
         self.wire_cord = []
@@ -668,7 +664,6 @@ class MainWindow(QMainWindow):
         self.scn()
     
     def create_new_object(self, info):
-        print("info: ", info)
         if info['opcao'] == "Ponto":
             new_object = Ponto(info['x'], info['y'])
             print(f'on instantiantion {new_object}, {new_object.y()}')
@@ -684,18 +679,15 @@ class MainWindow(QMainWindow):
             lados = (len(info.keys()) - 2) / 2  # Quantidade de lados = quantidade de chaves, menos 2(opcao e nome) divido por dois(cada lado tem x e y)
             list = []
             vertices = []
-
             for i in range(int(lados)):
                 point = QPointF(info[f'x{i+1}'], info[f'y{i+1}'])
                 list.append(point)
                 ponto = [info[f'x{i+1}'], info[f'y{i+1}'], 1]
                 vertices.append(ponto)
             new_object = Wireframe(list, vertices)
-            #self.draw_dispplay_file(new_object)
             self.display_file.append(new_object)
             self.add_on_display_file(new_object, info['nome'])
             self.objects.append(new_object)
-
         elif info["opcao"] == "Curva":
             curves = []
             #info:  {'opcao': 'Curva', 'nome': 'my_curve', 'p1': [100, 100], 'p4': [400, 400], 'r1': [200, 0], 'r4': [0, 200]}
@@ -703,7 +695,6 @@ class MainWindow(QMainWindow):
                 curve = [info[f'p1{i}'], info[f'p4{i}'], info[f'r1{i}'], info[f'r4{i}']]
                 curves.append(curve)
             lista_de_inteiros = [[tuple(map(int, item.split(','))) for item in sublista] for sublista in curves]
-            print("lista-de-inteiros: ", lista_de_inteiros)
             new_object = HermiteCurve(lista_de_inteiros)
             self.display_file.append(new_object)
             self.add_on_display_file(new_object, info['nome'])
@@ -717,7 +708,6 @@ class MainWindow(QMainWindow):
         self.xv_max = 600
         self.yv_min = 0
         self.yv_max = 500
-
         self.scale_acumulator = 1
 
     def create_viewport(self):
@@ -740,7 +730,7 @@ class MainWindow(QMainWindow):
             self.scene.removeItem(obj)
         self.onViewport = []
         for obj in self.display_file:
-            self.draw_dispplay_file(obj) 
+            self.draw_dispplay_file(obj)
         self.view.centerOn(self.Window_mundo.x_max-self.Window_mundo.x_min, self.Window_mundo.y_max-self.Window_mundo.y_min)
 
     def rotate_window_right(self):
@@ -761,14 +751,10 @@ class MainWindow(QMainWindow):
     def update_normalized_coordinates(self, combined_matrix): #multiplica vertices * matriz composta
         self.define_region_codes()
         for obj in self.display_file:
-            print(f'obj name = {obj.name}')
             if isinstance(obj, Wireframe):
                 updated_vertices = []    
                 for reta in obj.lines:
                     if reta.showing:
-                        # print(f'showing = {reta.showing}')
-                        # print(f'x1 = {reta.line().x1()}, y1 = {reta.line().y1()}, x2 = {reta.line().x2()}, y2 = {reta.line().y2()}')
-                        # print(f'x1I = {reta.x1I}, y1I = {reta.y1I}, x2I = {reta.x2I}, y2I = {reta.y2I}')
                         vertice1 = np.array([reta.x1I, reta.y1I, 1])
                         vertice2 = np.array([reta.x2I, reta.y2I, 1])
                         vertice1_updated = np.matmul(vertice1, combined_matrix)
@@ -782,68 +768,48 @@ class MainWindow(QMainWindow):
                 obj.normalized_vertices = lista_retas
 
             elif isinstance(obj, HermiteCurve):
-                #obj.points tem os pontos da curva
                 up_vertices = []
-                for sublist in obj.curve_points:
-                #for list in obj.curve_clipping:
-                    for list in sublist:
+                for list in obj.curve_clipping:
                         vertice = np.array([list[0], list[1], 1])
-                        vertice_up = np.matmul(vertice, combined_matrix)
+                        vertice_up = np.matmul(vertice, combined_matrix) #normalizando
                         up_vertices.append(vertice_up)
                 retas = []
                 for i in range(len(up_vertices) - 1):
                     x1,y1,x2,y2 = up_vertices[i][0], up_vertices[i][1], up_vertices[i+1][0], up_vertices[i+1][1]
                     retas.append([x1, y1, x2, y2])
-                obj.lines_curve = retas
-                #print("obj-norma: ", obj.normalized_vertices) #ate aqui funfa
+                obj.curve_clipping = retas
         self.update_viewport()
 
     def draw_dispplay_file(self, obj):
         if type(obj) == Wireframe:
-            #print(f'obj_drawing = {obj.name}')
-            #print('------------start wireframe transformation---------------')
             for line in obj.normalized_vertices:
-                #print(f'line = {line}')
                 new_x1, new_y1 = self.viewport_transformation(line[0], line[1])
                 new_x2, new_y2 = self.viewport_transformation(line[2], line[3])
-                #pen = l.pen() #??
-                #print("depois: ", new_x1, new_y1, new_x2, new_y2)
                 new = Reta(new_x1, new_y1, new_x2, new_y2)
                 if obj.color != None:
                     new.setPen(obj.color)
-                #new.setPen(pen)
                 self.scene.addItem(new)
                 self.onViewport.append(new)
                 self.view.show()
-            #print('------------finish wireframe transformation---------------')
         elif type(obj) == Reta:
-            #print("antes: ", obj.line().x1(), obj.line().y1(), obj.line().x2(), obj.line().y2() )
             new_x1, new_y1 = self.viewport_transformation(obj.line().x1(), obj.line().y1())
             new_x2, new_y2 = self.viewport_transformation(obj.line().x2(), obj.line().y2())
             pen = obj.pen()
-            #print("depois: ", new_x1, new_y1, new_x2, new_y2)
-
             new = Reta(new_x1, new_y1, new_x2, new_y2)
             new.setPen(pen)
             self.scene.addItem(new)
             self.onViewport.append(new)
             self.view.show()
         elif type(obj) == Ponto:
-            print('reach point')
-            #print(f'antes : x = {obj.x()}, y = {obj.y()}')
             new_x1, new_y1 = self.viewport_transformation(obj.x(), obj.y())
-            print(f'x = {new_x1}, y = {new_y1}')
             new = Ponto(new_x1, new_y1)
             self.scene.addItem(new)
             self.onViewport.append(new)
             self.view.show()
-            print("end setPoint")
         elif type(obj) == HermiteCurve:
-            for line in obj.lines_curve:
-                #print("antes: ",line[0], line[1], line[2], line[3])
+            for line in obj.curve_clipping:
                 new_x1, new_y1 = self.viewport_transformation(line[0], line[1])
                 new_x2, new_y2 = self.viewport_transformation(line[2], line[3])
-                #print("depois: ", new_x1, new_y1, new_x2, new_y2)
                 new = Reta(new_x1, new_y1, new_x2, new_y2)
                 if obj.color != None:
                     new.setPen(obj.color)
@@ -1027,8 +993,3 @@ class MainWindow(QMainWindow):
                     item.clipped = True
                     item.showing = False
                     print(f'reta not showing')
-
-                    
-
-
-

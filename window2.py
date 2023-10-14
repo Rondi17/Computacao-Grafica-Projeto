@@ -113,11 +113,7 @@ class DialogBox(QDialog):
                 self.fields_layout.addWidget(self.yInput)
                 self.listX.append(self.xInput)
                 self.listY.append(self.yInput)
-
         elif type_object == "curva":
-            print("num_curvas:", self.num_curves)
-            print("faz curva")
-
             self.fields_layout.addWidget(QLabel("Nome:"))
             self.nome = QLineEdit()
             self.fields_layout.addWidget(self.nome)
