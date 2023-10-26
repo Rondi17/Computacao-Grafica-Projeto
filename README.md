@@ -1,8 +1,10 @@
 # Computação Gráfica (INE5420) Ciências da Computação
 
-## Trabalho 1.6 - B-Splines utilizando Forward Differences
+## Trabalho 1.6 - B-Splines utilizando Forward Differences.
+
 Universidade Federal de Santa Catarina
 Prof. Aldo Von Wangenheim
+
 ### Alunos:
 
 - Alisson Rafael Barbosa 21104150
