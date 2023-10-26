@@ -8,8 +8,51 @@ class Mundo():
         self.x_max = x_max
         self.y_min = y_min
         self.y_max = y_max
-        self.centerX = self.x_max - self.x_min
-        self.centerY = self.y_max - self.y_min
+
+        self.padrao_x_min = x_min
+        self.padrao_x_max = x_max
+        self.padrao_y_min = y_min
+        self.padrao_y_max = y_max
+
+    def getCenterX(self):
+        return self.x_max - self.x_min
+
+    def getCenterY(self):
+        return self.y_max - self.y_min
+    
+    def getCenterX_padrao(self):
+        return self.padrao_x_max - self.padrao_x_min
+
+    def getCenterY_padrao(self):
+        return self.padrao_y_max - self.padrao_y_min
+
+    def getCenter(self):
+        return [self.getCenterX(), self.getCenterY()]
+    
+    def getXmin(self):
+        return self.x_min
+    
+    def setXmin(self, value):
+        self.x_min = value
+    
+    def getYmin(self):
+        return self.y_min
+    
+    def setYmin(self, value):
+        self.y_min = value
+
+    def getXmax(self):
+        return self.x_max
+    
+    def setXmax(self, value):
+        self.x_max = value
+
+    def getYmax(self):
+        return self.y_max
+    
+    def setYmax(self, value):
+        self.y_max = value
+    
 
 
 class Window():
@@ -46,8 +89,8 @@ class Window():
                          [math.sin(math.radians(self.degrees)), math.cos(math.radians(self.degrees)), 0],
                          [0, 0, 1]])
 
-        normalization_matrix = np.array([[2 / width, 0, 0],
-                                         [0, 2 / height, 0],
+        normalization_matrix = np.array([[1 / (width/2), 0, 0],
+                                         [0, 1 / (height/2), 0],
                                          [0, 0, 1]])
 
         combined_matrix = np.matmul(np.matmul(translate_matrix, rotate_matrix), normalization_matrix)
@@ -68,3 +111,12 @@ class Window():
     def pan_down(self):
         self.y_min += self.pan_factor
         self.y_max += self.pan_factor
+
+    def getCenterX(self):
+        return self.padrao_x_max - self.padrao_x_min
+
+    def getCenterY(self):
+        return self.padrao_y_max - self.padrao_y_min
+
+    def getCenter(self):
+        return [self.getCenterX(), self.getCenterY()]

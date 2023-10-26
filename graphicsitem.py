@@ -32,8 +32,9 @@ class Reta(QGraphicsLineItem):
         self.RC : list
         self.coeficienteLinear : float
 
-        self.clipped = True
+        self.clipped = False
         self.showing = False
+
         #intersection points
         self.x1I = x1
         self.y1I = y1
@@ -52,16 +53,27 @@ class Reta(QGraphicsLineItem):
 
     def getCenterY(self):
         return self.centerY
+    
+    def resetIntersection(self):
+        self.x1I = self.line().x1()
+        self.y1I = self.line().y1()
+        self.x2I = self.line().x2()
+        self.y2I = self.line().y2()
 
 
 class Wireframe():
     def __init__(self, lista, vertices):
-        self.lines = []
+        self.lines :list[Reta] = []
         self.vertices = vertices  #vai ter a lista de listas com os vertices
         self.points = lista
         self.normalized_vertices = [] #vai ter [(x1, y1,x2, y2)] retas que formam
         self.criar(lista, vertices)
         self.color = None
+        self.brush = None
+        self.fillPolygon = None
+
+        self.clippingLocation = []
+        self.clippingOrder = []
 
         self.name :str
         self.centerX = 0.0
@@ -110,10 +122,16 @@ class HermiteCurve():
         h2 = -2 * t3 + 3 * t2
         h3 = t3 - 2 * t2 + t
         h4 = t3 - t2
+        TMH = np.array([h1,h2,h3,h4]) #Matriz 1x4
+        GHx = np.array([[p1[0]], [p4[0]], [r1[0]], [r4[0]]]) #Matriz 4x1
+        GHy = np.array([[p1[1]], [p4[1]], [r1[1]], [r4[1]]]) #Matriz 4x1
 
-        x = h1 * p1[0] + h2 * p4[0] + h3 * r1[0] + h4 * r4[0]
-        y = h1 * p1[1] + h2 * p4[1] + h3 * r1[1] + h4 * r4[1]
-        return x,y
+        #x = h1 * p1[0] + h2 * p4[0] + h3 * r1[0] + h4 * r4[0]
+        #y = h1 * p1[1] + h2 * p4[1] + h3 * r1[1] + h4 * r4[1]
+
+        x = np.matmul(TMH, GHx) #matriz 1x1
+        y = np.matmul(TMH, GHy) #matriz 1x1
+        return x[0],y[0]
 
     #avalie a curva em varios valores de t
     def evaluate(self):
@@ -125,6 +143,7 @@ class HermiteCurve():
             self.curve_points.append(points)
 
     def clipping(self, xmin, ymin, xmax, ymax):
+        self.curve_clipping = []
         for list in self.curve_points:
             for sub in list:    #sub = [x, y]
                 if (xmin <= sub[0] <= xmax and ymin <= sub[1] <= ymax):
@@ -217,3 +236,6 @@ class BSplineCurve():
         for tuple_ in self.vertices:    #tuple_ = [x, y]
                 if (xmin <= tuple_[0] <= xmax and ymin <= tuple_[1] <= ymax):
                      self.curve_clipping.append(tuple_)
+
+
+        

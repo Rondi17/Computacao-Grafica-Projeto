@@ -4,7 +4,7 @@ from PyQt5.QtWidgets import QMainWindow, QPushButton, QGraphicsView, QGraphicsSc
 from PyQt5.QtCore import Qt, QSize, QPoint, QObject, QPointF, QRectF
 from PyQt5.QtWidgets import *
 from PyQt5.QtGui import *
-from graphicsitem import *
+from graphicsitem import Ponto, Reta, Wireframe
 from window2 import DialogBox
 from window import *
 from descriptor_obj import FileObj
@@ -24,32 +24,38 @@ class MainWindow(QMainWindow):
         self.height = 600
         self.set_window_default_paramaters()
         self.initUI()
+        self.zoomMode = False
 
     def objects_test(self):
-        triangulo = {'opcao': 'Wireframe', 'nome': 'triangulo', 'x1': 0, 'y1': 0, 'x2': 200, 'y2': 0, 'x3': 100, 'y3': 100}
-        #self.create_new_object(triangulo)
-
-        quadrado = {'opcao': 'Wireframe', 'nome': 'quadrado', 'x1': 200, 'y1': 300, 'x2': 500, 'y2': 300, 'x3': 500, 'y3': 500, 'x4': 200, 'y4': 500}
-        #self.create_new_object(quadrado)
-
-        outside_triangle = {'opcao': 'Wireframe', 'nome': 'outside_triangle', 'x1': -1000, 'y1': -1000, 'x2': -1500, 'y2': 1200, 'x3': 500, 'y3': 1000}
-        #self.create_new_object(outside_triangle)
-
-        window_limit = {'opcao': 'Wireframe', 'nome': 'window_limit', 'x1': self.Window_mundo.x_min+100, 'y1': self.Window_mundo.y_min+100,
-                                                                  'x2': self.Window_mundo.x_min+100, 'y2': self.Window_mundo.y_max-100,
-                                                                  'x3': self.Window_mundo.x_max-100, 'y3': self.Window_mundo.y_max-100,
-                                                                  'x4': self.Window_mundo.x_max-100, 'y4': self.Window_mundo.y_min+100}
+        window_limit = {'opcao': 'Wireframe', 'nome': 'window_limit', 'x1': self.Window_mundo.x_min+50, 'y1': self.Window_mundo.y_min+50,
+                                                                  'x2': self.Window_mundo.x_min+50, 'y2': self.Window_mundo.y_max-50,
+                                                                  'x3': self.Window_mundo.x_max-50, 'y3': self.Window_mundo.y_max-50,
+                                                                  'x4': self.Window_mundo.x_max-50, 'y4': self.Window_mundo.y_min+50}
         self.create_new_object(window_limit)
 
-        curve_continue = {'opcao': 'Curva-Hermite', 'nome': 'curva-continuidade4', 'num_curvas': 4, 'p10': '0,200', 'p40': '400,200', 'r10': '100,0', 'r40': '100,0', 'p11': '400,200', 'p41': '600,600', 'r11': '100,0', 'r41': '100,400', 'p12': '600,600', 'p42': '1000,200', 'r12': '100,400', 'r42': '100,0', 'p13': '1000,200', 'p43': '1200,200', 'r13': '100,0', 'r43': '100,0'}
-        #self.create_new_object(curve_continue)
+        triangulo = {'opcao': 'Wireframe', 'nome': 'triangulo', 'x1': 0, 'y1': 0, 'x2': 200, 'y2': 0, 'x3': 100, 'y3': 100}
+        self.create_new_object(triangulo)
 
-        curve_bspline = {'opcao': 'Curva-BSpline', 'nome': 'my-bspline', 'num_control_points': 4, 'p1': '100,100', 'p2': '200,200', 'p3': '300,200', 'p4': '400,100'}
-        #self.create_new_object(curve_bspline)
+        quadrado = {'opcao': 'Wireframe', 'nome': 'quadrado', 'x1': 200, 'y1': 300, 'x2': 500, 'y2': 300, 'x3': 500, 'y3': 500, 'x4': 200, 'y4': 500}
+        self.create_new_object(quadrado)
 
-        curve_bspline2 = {'opcao': 'Curva-BSpline', 'nome': 'my-bspline', 'num_control_points': 10, 'p1': '0,0', 'p2': '100,100', 'p3': '200,100', 'p4': '300,0','p5': '400,0', 'p6': '500,200', 'p7': '600,200','p8': '700,0', 'p9': '800,0','p10': '900,0',}
-        #self.create_new_object(curve_bspline2)
+        outside_triangle = {'opcao': 'Wireframe', 'nome': 'outside_triangle', 'x1': -1000, 'y1': -1000, 'x2': -1500, 'y2': 1200, 'x3': 500, 'y3': 1000}
+        self.create_new_object(outside_triangle)
 
+        # curve = {'opcao': 'Curva', 'nome': 'lal', 'num_curvas': 1, 'p10': '1,1', 'p40': '2,2', 'r10': '3,3', 'r40': '4,4'}
+        curve = {'opcao': 'Curva', 'nome': 'horizontal-curve', 'num_curvas': 3, 'p10': '-1200,0', 'p40': '-400,0', 'r10': '0,50', 'r40': '0,-50', 'p11': '-400,0', 'p41': '400,0', 'r11': '0,50', 'r41': '0,-50', 'p12': '400,0', 'p42': '1200,0', 'r12': '0,50', 'r42': '0,-50'}
+        #self.create_new_object(curve)
+
+        curve_continue = {'opcao': 'Curva', 'nome': 'curva-continuidade4', 'num_curvas': 4, 'p10': '0,200', 'p40': '400,200', 'r10': '100,0', 'r40': '100,0', 'p11': '400,200', 'p41': '600,600', 'r11': '100,0', 'r41': '100,400', 'p12': '600,600', 'p42': '1000,200', 'r12': '100,400', 'r42': '100,0', 'p13': '1000,200', 'p43': '1200,200', 'r13': '100,0', 'r43': '100,0'}
+        self.create_new_object(curve_continue)
+        
+        curve_bspline = {'opcao': 'Curva-BSpline', 'nome': 'my-bspline1', 'num_control_points': 4, 'p1': '100,100', 'p2': '200,200', 'p3': '300,200', 'p4': '400,100'}
+        self.create_new_object(curve_bspline)
+
+        curve_bspline2 = {'opcao': 'Curva-BSpline', 'nome': 'my-bspline2', 'num_control_points': 10, 'p1': '0,0', 'p2': '100,100', 'p3': '200,100', 'p4': '300,0','p5': '400,0', 'p6': '500,200', 'p7': '600,200','p8': '700,0', 'p9': '800,0','p10': '900,0',}
+        self.create_new_object(curve_bspline2)
+        
+        self.scn()
 
     def initUI(self):
         self.wire_cord = []
@@ -57,8 +63,8 @@ class MainWindow(QMainWindow):
         self.zoomFactor = 1.1
         #Fator utilizado para pan na viewport
         self.panFactor = 40.0
-        self.objects = []
         self.open_save = FileObj()
+        
         self.setWindowTitle(self.title)
         self.setGeometry(self.left, self.top, self.width, self.height)
         self.create_viewport()
@@ -66,7 +72,6 @@ class MainWindow(QMainWindow):
         self.create_display_fileWidget()
         self.create_window()
         self.objects_test()
-        self.create_window()
         self.show()
 
     #Cria o ListWidget responsável por representar o displayfile
@@ -234,7 +239,7 @@ class MainWindow(QMainWindow):
         botaoDown.resize(50, 30)
         botaoDown.clicked.connect(self.window_pan_down)
         QtWidgets.QShortcut(
-            QtGui.QKeySequence(QtGui.QKeySequence('s')),
+            QtGui.QKeySequence(QtGui.QKeySequence('Alt+S')),
             self.view,
             context=QtCore.Qt.WidgetShortcut,
             activated=self.window_pan_down,
@@ -280,37 +285,34 @@ class MainWindow(QMainWindow):
             self.create_new_object(user_input)
 
     def new_zoom_in(self):
-        zoom = 1.1
-        scale_factor = 1.1
-        print(f"Scale factor atual: {scale_factor}")
-        halfx = self.window_obj.x_max - self.window_obj.x_min
-        halfy = self.window_obj.y_max - self.window_obj.y_min
-        self.window_obj.x_min += halfx * (1 - 1 / scale_factor)
-        self.window_obj.y_min += halfy * (1 - 1 / scale_factor)
-        self.window_obj.x_max -= halfx * (1 - 1 / scale_factor)
-        self.window_obj.y_max -= halfy * (1 - 1 / scale_factor)
+        scale_factor = 0.05
+        
+        halfx = self.window_obj.getCenterX()
+        halfy = self.window_obj.getCenterY()
+        self.window_obj.x_min += halfx * scale_factor
+        self.window_obj.y_min += halfy * scale_factor
+        self.window_obj.x_max -= halfx * scale_factor
+        self.window_obj.y_max -= halfy * scale_factor
         self.view.centerOn(halfx, halfy)
-        #self.Window.x_min += 60
-        #self.Window.y_min += 50
-        #self.Window.x_max -= 60
-        #self.Window.y_max -= 50
-        self.update_viewport()
-        print("new zoom in")
+        self.update_window_limit('zoom_in')
+        self.scn()
+        #self.update_viewport()
+        ##("new zoom in")
 
     def new_zoom_out(self):
-        scale_factor = 1.1
-        print(f"Scale factor atual: {scale_factor}")
-        halfx = self.window_obj.x_max - self.window_obj.x_min
-        halfy = self.window_obj.y_max - self.window_obj.y_min
-        self.window_obj.x_min -= halfx * (scale_factor - 1)
-        self.window_obj.y_min -= halfy * (scale_factor - 1)
-        self.window_obj.x_max += halfx * (scale_factor - 1)
-        self.window_obj.y_max += halfy * (scale_factor - 1)
+        scale_factor = 0.05
+        
+        halfx = self.window_obj.getCenterX()
+        halfy = self.window_obj.getCenterY()
+        self.window_obj.x_min -= halfx * scale_factor
+        self.window_obj.y_min -= halfy * scale_factor
+        self.window_obj.x_max += halfx * scale_factor
+        self.window_obj.y_max += halfy * scale_factor 
         self.view.centerOn(halfx, halfy)
-        # self.Window.x_min = self.padrao_x_min * scale_factor
-        # self.Window.y_min = self.padrao_y_min * scale_factor
-        self.update_viewport()
-        print("new zoom out")
+        self.update_window_limit('zoom_out')
+        self.scn()
+        #self.update_viewport()
+        #print("new zoom out")
 
     @QtCore.pyqtSlot()
     def changeColor_call(self):
@@ -319,9 +321,13 @@ class MainWindow(QMainWindow):
         self.dialog.setWindowTitle("Qual objeto deseja mudar de cor?")
         self.layout = QVBoxLayout(self.dialog)
 
-        self.option_combo = QComboBox()
+        self.object_combo = QComboBox()
         for item in self.display_file:
-            self.option_combo.addItem(item.name)
+            self.object_combo.addItem(item.name)
+        self.layout.addWidget(self.object_combo)
+
+        self.option_combo = QComboBox()
+        self.option_combo.addItems(['Pen', 'Brush'])
         self.layout.addWidget(self.option_combo)
 
         submit_button = QPushButton('Ok')
@@ -332,15 +338,19 @@ class MainWindow(QMainWindow):
 
     def colorDialog(self):
         for item in self.display_file:
-            if item.name == self.option_combo.currentText():
+            if item.name == self.object_combo.currentText():
                 object = item
                 break
+        option = self.option_combo.currentText()
         colorDialog = QColorDialog(self)
         colorDialog.setCurrentColor(Qt.red)
         if colorDialog.exec_() == QColorDialog.Accepted:
             color = colorDialog.selectedColor()
-            if type(object) == Wireframe:
-                object.color = color
+            if type(object) == Wireframe or HermiteCurve or BSplineCurve:
+                if option == 'Pen':
+                    object.color = color
+                elif option == 'Brush':
+                    object.brush = color
             self.dialog.accept()
         self.scn()
             
@@ -451,12 +461,12 @@ class MainWindow(QMainWindow):
             for vertice in object.vertices:
                 x = vertice[0]
                 y = vertice[1]
-                print(f'Points before: x = {x}, y = {y}')
+                #print(f'Points before: x = {x}, y = {y}')
                 old_points = np.array([x, y, 1])
                 new_points = np.matmul(old_points, final_matrix)
                 vertice[0] =new_points[0]
                 vertice[1] =new_points[1]
-                print(f'Points after: x = {x}, y = {y}')
+                #print(f'Points after: x = {x}, y = {y}')
             #Atualiza linhas do wireframe com base nos pontos atualizados
             for i in range(len(object.vertices)):
                 x1, y1, x2, y2 = object.vertices[i-1][0], object.vertices[i-1][1], object.vertices[i][0], object.vertices[i][1]
@@ -604,12 +614,12 @@ class MainWindow(QMainWindow):
             for vertice in object.vertices:
                 x = vertice[0]
                 y = vertice[1]
-                print(f'Points before: x = {x}, y = {y}')
+                #print(f'Points before: x = {x}, y = {y}')
                 old_points = np.array([x, y, 1])
                 new_points = np.matmul(old_points, translate_matrix)
                 vertice[0] = new_points[0]
                 vertice[1] = new_points[1]
-                print(f'Points after: x = {x}, y = {y}')
+                #print(f'Points after: x = {x}, y = {y}')
 
             #Atualiza linhas do wireframe com base nos pontos atualizados
             for i in range(len(object.vertices)):
@@ -651,20 +661,74 @@ class MainWindow(QMainWindow):
 
     def window_pan_right(self):
         self.window_obj.pan_right()
+        self.update_window_limit('pan_right')
         self.scn()
         #self.update_viewport() isso quem chama é ... 
 
     def window_pan_left(self):
         self.window_obj.pan_left()
+        self.update_window_limit('pan_left')
         self.scn()
 
     def window_pan_up(self):
         self.window_obj.pan_up()
+        self.update_window_limit('pan_up')
         self.scn()
 
     def window_pan_down(self):
         self.window_obj.pan_down()
+        self.update_window_limit('pan_down')
         self.scn()
+
+    def update_window_limit(self, mode):
+        if mode == 'pan_right':
+            self.Window_mundo.x_min -= self.panFactor
+            self.Window_mundo.x_max -= self.panFactor
+        elif mode == 'pan_left':
+            self.Window_mundo.x_min += self.panFactor
+            self.Window_mundo.x_max += self.panFactor
+        elif mode == 'pan_up':
+            self.Window_mundo.y_min -= self.panFactor
+            self.Window_mundo.y_max -= self.panFactor
+        elif mode == 'pan_down':
+            self.Window_mundo.y_min += self.panFactor
+            self.Window_mundo.y_max += self.panFactor
+        elif mode[:4] == 'zoom':
+            self.zoomMode = True # Usado para fazer transformada de viewport específica na window_limit quando zoom é utilizado
+            scale_factor = 0.05
+            halfx = self.Window_mundo.getCenterX_padrao()
+            halfy = self.Window_mundo.getCenterY_padrao()
+            print(f'halfx = {halfx}, halfy = {halfy}')
+            if mode == 'zoom_in':
+                self.Window_mundo.setXmin(self.Window_mundo.getXmin() + halfx * scale_factor)
+                self.Window_mundo.setYmin(self.Window_mundo.getYmin() + halfy * scale_factor) 
+                self.Window_mundo.setXmax(self.Window_mundo.getXmax() - halfx * scale_factor) 
+                self.Window_mundo.setYmax(self.Window_mundo.getYmax() - halfy * scale_factor) 
+            
+            elif mode == 'zoom_out':
+                self.Window_mundo.setXmin(self.Window_mundo.getXmin() - halfx * scale_factor)
+                self.Window_mundo.setYmin(self.Window_mundo.getYmin() - halfy * scale_factor) 
+                self.Window_mundo.setXmax(self.Window_mundo.getXmax() + halfx * scale_factor) 
+                self.Window_mundo.setYmax(self.Window_mundo.getYmax() + halfy * scale_factor)
+            
+            print(f'x_min = {self.Window_mundo.x_min}')
+            print(f'y_min = {self.Window_mundo.y_min}')
+            print(f'x_max = {self.Window_mundo.x_max}')
+            print(f'y_max = {self.Window_mundo.y_max}')
+            
+            for item in self.display_file:
+                if item.name == 'window_limit':
+                    self.display_file.remove(item)
+                    window_limit = {'opcao': 'Wireframe', 'nome': 'window_limit', 'x1': self.Window_mundo.x_min+50, 'y1': self.Window_mundo.y_min+50,
+                                                                                    'x2': self.Window_mundo.x_min+50, 'y2': self.Window_mundo.y_max-50,
+                                                                                    'x3': self.Window_mundo.x_max-50, 'y3': self.Window_mundo.y_max-50,
+                                                                                    'x4': self.Window_mundo.x_max-50, 'y4': self.Window_mundo.y_min+50}
+            self.create_new_object(window_limit)
+            print('window_limit')
+            print(f'x1 = {window_limit["x1"]}, y1 = {window_limit["y1"]}')
+            print(f'x2 = {window_limit["x2"]}, y2 = {window_limit["y2"]}')
+            print(f'x3 = {window_limit["x3"]}, y3 = {window_limit["y3"]}')
+            print(f'x4 = {window_limit["x4"]}, y4 = {window_limit["y4"]}')
     
     def create_new_object(self, info):
         if info['opcao'] == "Ponto":
@@ -688,11 +752,13 @@ class MainWindow(QMainWindow):
                 ponto = [info[f'x{i+1}'], info[f'y{i+1}'], 1]
                 vertices.append(ponto)
             new_object = Wireframe(list, vertices)
+            if info["nome"] == 'window_limit':
+                new_object.color = QColor(Qt.red)
             self.display_file.append(new_object)
             self.add_on_display_file(new_object, info['nome'])
-            self.objects.append(new_object)
-        elif info["opcao"] == "Curva-Hermite":
+        elif info["opcao"] == "Curva":
             curves = []
+            #info:  {'opcao': 'Curva', 'nome': 'my_curve', 'p1': [100, 100], 'p4': [400, 400], 'r1': [200, 0], 'r4': [0, 200]}
             for i in range((info["num_curvas"])):
                 curve = [info[f'p1{i}'], info[f'p4{i}'], info[f'r1{i}'], info[f'r4{i}']]
                 curves.append(curve)
@@ -700,7 +766,6 @@ class MainWindow(QMainWindow):
             new_object = HermiteCurve(lista_de_inteiros)
             self.display_file.append(new_object)
             self.add_on_display_file(new_object, info['nome'])
-
         elif info["opcao"] == "Curva-BSpline":
             control_points = []
             for i in range(1, info["num_control_points"] + 1):
@@ -710,17 +775,18 @@ class MainWindow(QMainWindow):
             new_object = BSplineCurve(control_points)
             self.display_file.append(new_object)
             self.add_on_display_file(new_object, info['nome'])
-        self.scn()
+        
 
     def set_window_default_paramaters(self):
         #window dimensions
-        self.Window_mundo = Mundo(-800, 800, -800, 800)
+        self.Window_mundo = Mundo(0, 800, 0, 800)
         #viewport dimensions
         self.xv_min = 0
-        self.xv_max = 600
+        self.xv_max = 300
         self.yv_min = 0
-        self.yv_max = 500
+        self.yv_max = 250
         self.scale_acumulator = 1
+        #600, 500
 
     def create_viewport(self):
         self.scene = QGraphicsScene()
@@ -730,9 +796,15 @@ class MainWindow(QMainWindow):
         #Set noAnchor to GraphicsView, enabling the view to move
         self.view.setTransformationAnchor(QGraphicsView.ViewportAnchor(0)) #ponto de ancoragem
 
-    def viewport_transformation(self, xw, yw):
+    def viewport_transformation(self, xw, yw, name):
+
         sx = (self.xv_max - self.xv_min) / (self.window_obj.x_max - self.window_obj.x_min)
         sy = (self.yv_max - self.yv_min) / (self.window_obj.y_max - self.window_obj.y_min)
+        
+        if name == 'window_limit' and not self.zoomMode:
+            xv = self.xv_min + (xw - (-1)) * sx
+            yv = self.yv_max - (self.yv_min + (yw - (-1)) * sy)
+            return xv, yv
         xv = self.xv_min + (xw - self.window_obj.x_min) * sx
         yv = self.yv_max - (self.yv_min + (yw - self.window_obj.y_min) * sy)
         return xv, yv
@@ -743,7 +815,15 @@ class MainWindow(QMainWindow):
         self.onViewport = []
         for obj in self.display_file:
             self.draw_dispplay_file(obj)
-        self.view.centerOn(self.Window_mundo.x_max-self.Window_mundo.x_min, self.Window_mundo.y_max-self.Window_mundo.y_min)
+        self.view.centerOn(self.Window_mundo.getCenterX(), self.Window_mundo.getCenterY())
+        self.zoomMode = False
+
+        '''print(f'window_obj:')
+        print(f'xmin = {self.window_obj.x_min}, ymin = {self.window_obj.y_min}, xmax = {self.window_obj.x_max}, ymax = {self.window_obj.y_max}')
+        print(f'Window_mundo')
+        print(f'xmin = {self.Window_mundo.x_min}, ymin = {self.Window_mundo.y_min}, xmax = {self.Window_mundo.x_max}, ymax = {self.Window_mundo.y_max}')
+        print(f'clipping')
+        print(f'xmin = {self.clipping_x_min}, ymin = {self.clipping_y_min}, xmax = {self.clipping_x_max}, ymax = {self.clipping_y_max}')'''
 
     def rotate_window_right(self):
         degrees = self.get_degrees()
@@ -756,13 +836,20 @@ class MainWindow(QMainWindow):
         self.scn()
 
     def scn(self, degrees=0):
-        combined = self.window_obj.scn(self.Window_mundo.centerX, self.Window_mundo.centerY)  #retorna a matriz composta
+        combined = self.window_obj.scn(self.Window_mundo.getCenterX(), self.Window_mundo.getCenterY())  #retorna a matriz composta
+        print(f'--------------------\n xmin = {self.Window_mundo.getXmin()}, ymin = {self.Window_mundo.getYmin()}, xmax = {self.Window_mundo.getXmax()}, ymax = {self.Window_mundo.getYmax()}\n x = {self.Window_mundo.getCenterX()}, y = {self.Window_mundo.getCenterY()}\n --------------------')
         #print('call update_normalized_coordinates')
         self.update_normalized_coordinates(combined)
 
     def update_normalized_coordinates(self, combined_matrix): #multiplica vertices * matriz composta
-        self.define_region_codes()
+        #self.define_region_codes()
+        self.exec_liang_barsky()
         for obj in self.display_file:
+            print(obj.name)
+            if obj.name == 'window-limit':
+                start, step = 1, 2
+            else:
+                start, step = 0, 1
             if isinstance(obj, Wireframe):
                 updated_vertices = []    
                 for reta in obj.lines:
@@ -773,10 +860,17 @@ class MainWindow(QMainWindow):
                         vertice2_updated = np.matmul(vertice2, combined_matrix)
                         updated_vertices.append(vertice1_updated)
                         updated_vertices.append(vertice2_updated)
+                        #print(f'vertice1 = {vertice1}')
+                        #print(f'vertice2 = {vertice2}')
+                        #print(f'vertice1_updated = {vertice1_updated}')
+                        #print(f'vertice2_updated = {vertice2_updated}')
+                        
                 lista_retas = []
-                for i in range(len(updated_vertices)):
+                print('listas')
+                for i in range(start, len(updated_vertices), step):
                     x1, y1, x2, y2 = updated_vertices[i-1][0], updated_vertices[i-1][1], updated_vertices[i][0], updated_vertices[i][1]
                     lista_retas.append([x1, y1, x2, y2])
+                    print(f'x1 = {x1}, y1 = {y1}, x2 = {x2}, y2 = {y2}')
                 obj.normalized_vertices = lista_retas
 
             elif isinstance(obj, HermiteCurve):
@@ -790,7 +884,7 @@ class MainWindow(QMainWindow):
                     x1,y1,x2,y2 = up_vertices[i][0], up_vertices[i][1], up_vertices[i+1][0], up_vertices[i+1][1]
                     retas.append([x1, y1, x2, y2])
                 obj.curve_clipping = retas
-
+            
             elif isinstance(obj, BSplineCurve):
                 up_vertices = []
                 for tuple_ in obj.curve_clipping:
@@ -806,18 +900,39 @@ class MainWindow(QMainWindow):
 
     def draw_dispplay_file(self, obj):
         if type(obj) == Wireframe:
+            pontos = []
+            '''if obj.name == 'window_limit':
+                print('window_obj')
+                print(f'xmin = {self.window_obj.x_min}, ymin = {self.window_obj.y_min}, xmax = {self.window_obj.x_max}, ymax = {self.window_obj.y_max}')
+                print('window limit: ')'''
+            #print(obj.name)
             for line in obj.normalized_vertices:
-                new_x1, new_y1 = self.viewport_transformation(line[0], line[1])
-                new_x2, new_y2 = self.viewport_transformation(line[2], line[3])
+                new_x1, new_y1 = self.viewport_transformation(line[0], line[1], obj.name)
+                new_x2, new_y2 = self.viewport_transformation(line[2], line[3], obj.name)
                 new = Reta(new_x1, new_y1, new_x2, new_y2)
+                #if obj.name == 'window_limit':
+                    #print(len(obj.normalized_vertices))
+                #print(f'x1 = {new_x1}, y1 = {new_y1}, x2 = {new_x2}, y2 = {new_y2}')
                 if obj.color != None:
                     new.setPen(obj.color)
+                if obj.brush != None:
+                    pontos.append([new_x1, new_y1])
                 self.scene.addItem(new)
                 self.onViewport.append(new)
                 self.view.show()
+            if obj.brush != None:
+                if obj.fillPolygon != None:
+                        self.scene.removeItem(obj.fillPolygon)
+                brush_area = QPolygonF(QPointF(ponto[0], ponto[1]) for ponto in pontos)
+                for ponto in pontos:
+                    print(f'------------ ponto_polygon --------------------- = {ponto[0], ponto[1]}') 
+                brush_poligon = QGraphicsPolygonItem(brush_area)
+                brush_poligon.setBrush(obj.brush)
+                self.scene.addItem(brush_poligon)
+                obj.fillPolygon = brush_poligon
         elif type(obj) == Reta:
-            new_x1, new_y1 = self.viewport_transformation(obj.line().x1(), obj.line().y1())
-            new_x2, new_y2 = self.viewport_transformation(obj.line().x2(), obj.line().y2())
+            new_x1, new_y1 = self.viewport_transformation(obj.line().x1(), obj.line().y1(), obj.name)
+            new_x2, new_y2 = self.viewport_transformation(obj.line().x2(), obj.line().y2(), obj.name)
             pen = obj.pen()
             new = Reta(new_x1, new_y1, new_x2, new_y2)
             new.setPen(pen)
@@ -825,15 +940,20 @@ class MainWindow(QMainWindow):
             self.onViewport.append(new)
             self.view.show()
         elif type(obj) == Ponto:
-            new_x1, new_y1 = self.viewport_transformation(obj.x(), obj.y())
+            new_x1, new_y1 = self.viewport_transformation(obj.x(), obj.y(), obj.name)
             new = Ponto(new_x1, new_y1)
             self.scene.addItem(new)
             self.onViewport.append(new)
             self.view.show()
         elif type(obj) == HermiteCurve:
+            print("HermiteCurve draw << \n")
+            print(len(obj.curve_clipping))
             for line in obj.curve_clipping:
-                new_x1, new_y1 = self.viewport_transformation(line[0], line[1])
-                new_x2, new_y2 = self.viewport_transformation(line[2], line[3])
+                #print()
+                #print(line[0], line[1])
+                #print(line[2], line[3])
+                new_x1, new_y1 = self.viewport_transformation(line[0], line[1], obj.name)
+                new_x2, new_y2 = self.viewport_transformation(line[2], line[3], obj.name)
                 new = Reta(new_x1, new_y1, new_x2, new_y2)
                 if obj.color != None:
                     new.setPen(obj.color)
@@ -843,8 +963,8 @@ class MainWindow(QMainWindow):
         elif type(obj) == BSplineCurve:
             print("BSplineCurve draw << \n")
             for line in obj.curve_clipping:
-                new_x1, new_y1 = self.viewport_transformation(line[0], line[1])
-                new_x2, new_y2 = self.viewport_transformation(line[2], line[3])
+                new_x1, new_y1 = self.viewport_transformation(line[0], line[1], obj.name)
+                new_x2, new_y2 = self.viewport_transformation(line[2], line[3], obj.name)
                 new = Reta(new_x1, new_y1, new_x2, new_y2)
                 if obj.color != None:
                     new.setPen(obj.color)
@@ -894,6 +1014,7 @@ class MainWindow(QMainWindow):
             if self.window_obj.y_min <= point.y() <= self.window_obj.y_max:
                 point.clipped = True
 
+
     #funcao que chama o metodo clipping dos objetos
     def define_region_codes(self):
         for item in self.display_file:
@@ -927,7 +1048,8 @@ class MainWindow(QMainWindow):
         if isinstance(item, Reta):
                 x1, y1, x2, y2 = item.line().x1(), item.line().y1(), item.line().x2(), item.line().y2()
                 #print(f'x1 = {x1}, y1 = {y1}, x2 = {x2}, y2 = {y2}')
-                xmin, ymin, xmax, ymax = self.Window_mundo.x_min +100, self.Window_mundo.y_min+100, self.Window_mundo.x_max - 100, self.Window_mundo.y_max -100
+                xmin, ymin, xmax, ymax = self.Window_mundo.x_min + 50, self.Window_mundo.y_min + 50, self.Window_mundo.x_max - 50, self.Window_mundo.y_max - 50
+                #print(f'xmin = {xmin}, ymin = {ymin}, xmax = {xmax}, ymax = {ymax}')
                 x, y = x1, y1
                 item.RC = ['', ''] #empty list with strings to be overwritten
                 for _ in range(2):
@@ -962,9 +1084,12 @@ class MainWindow(QMainWindow):
                     item.showing = True
                 elif item.RC[0] != item.RC[1]: #parcialmente visivel:
                     if item.RC[0] & item.RC[1] == 0:
-                        #print(f'x1 = {x1}, y1 = {y1}, x2 = {x2}, y2 = {y2}')
-                        #print(f'xmin = {xmin}, ymin = {ymin}, xmax = {xmax}, ymax = {ymax}')
-                        m = (y2 - y1) / (x2 - x1)
+                        print(f'x1 = {x1}, y1 = {y1}, x2 = {x2}, y2 = {y2}')
+                        print(f'xmin = {xmin}, ymin = {ymin}, xmax = {xmax}, ymax = {ymax}')
+                        try:
+                            m = (y2 - y1) / (x2 - x1)
+                        except ZeroDivisionError:
+                            m = 0
                         intersection = item.RC[0] | item.RC[1] # logical OR
                         intersection = bin(intersection)[2:] # Get binary representation without '0b'
                         intersection += '0' * (4 - len(intersection)) # complete intersection with zeros on the left until reach 4 bits
@@ -1000,34 +1125,196 @@ class MainWindow(QMainWindow):
                         
                         if intersection[0] == '1': # Top intersection
                             y = ymax
-                            x = x1 + (1/m)*(ymax - y1)
-                            if xmin < x < xmax:
-                                item.clipped = True
-                                item.showing = True
-                                if  y1> y2:
-                                    item.x1I = x
-                                    item.y1I = y
-                                else: 
-                                    item.x2I = x
-                                    item.y2I = y
-                                print(f'top intersection, x = {x}, y = {y}')
+                            try:
+                                x = x1 + (1/m)*(ymax - y1)
+                                if xmin < x < xmax:
+                                    item.clipped = True
+                                    item.showing = True
+                                    if  y1> y2:
+                                        item.x1I = x
+                                        item.y1I = y
+                                    else: 
+                                        item.x2I = x
+                                        item.y2I = y
+                                    print(f'top intersection, x = {x}, y = {y}')
+                            except ZeroDivisionError:
+                                pass
 
-                        
                         if intersection[1] == '1': #Bottom intersection
                             y = ymin
-                            x = x1 + (1/m)*(ymin - y1)
-                            if xmin < x < xmax:
-                                item.clipped = True
-                                item.showing = True
-                                if y1 < y2:
-                                    item.x1I = x
-                                    item.y1I = y
-                                else: 
-                                    item.x2I = x
-                                    item.y2I = y
-                                print(f'bottom intersection, x = {x}, y = {y}')
+                            try:
+                                x = x1 + (1/m)*(ymin - y1)
+                                if xmin < x < xmax:
+                                    item.clipped = True
+                                    item.showing = True
+                                    if y1 < y2:
+                                        item.x1I = x
+                                        item.y1I = y
+                                    else: 
+                                        item.x2I = x
+                                        item.y2I = y
+                                    print(f'bottom intersection, x = {x}, y = {y}')
+                            except ZeroDivisionError:
+                                pass
                         
                 elif item.RC[0] & item.RC[1] != 0: #Completamente fora da janela
                     item.clipped = True
                     item.showing = False
-                    print(f'reta not showing')
+                    #print(f'reta not showing')
+
+    def exec_liang_barsky(self):
+        for item in self.display_file:
+            if item.name == 'window_limit':
+                for reta in item.lines:
+                    reta.showing = True
+                continue
+            print(f'item = {item.name}')
+            if isinstance(item, Wireframe):
+                for reta in item.lines:
+                    self.liang_barsky(reta)
+                    print()
+                    print(f'x1I = {reta.x1I}, y1I = {reta.y1I}, x2I = {reta.x2I}, y2I = {reta.y2I}')
+                    print(reta.showing)
+            elif isinstance(item, Reta):
+                self.liang_barsky(item)
+            elif isinstance(item, Ponto):
+                self.point_clipping(item)
+            elif isinstance(item, HermiteCurve):
+                xmin, ymin, xmax, ymax = self.Window_mundo.x_min +50, self.Window_mundo.y_min+50, self.Window_mundo.x_max - 50, self.Window_mundo.y_max -50
+                item.clipping(xmin, ymin, xmax, ymax)
+            elif isinstance(item, BSplineCurve):
+                xmin, ymin, xmax, ymax = self.Window_mundo.x_min + 50, self.Window_mundo.y_min + 50, self.Window_mundo.x_max - 50, self.Window_mundo.y_max - 50
+                item.clipping(xmin, ymin, xmax, ymax)
+            print()
+            print()
+
+    def liang_barsky(self, item):
+        item.resetIntersection()
+        x1, y1, x2, y2 = item.line().x1(), item.line().y1(), item.line().x2(), item.line().y2()
+        xmin, ymin, xmax, ymax = self.Window_mundo.x_min + 50, self.Window_mundo.y_min + 50, self.Window_mundo.x_max - 50, self.Window_mundo.y_max - 50
+        deltaX = x2 - x1
+        deltaY = y2 - y1
+
+        print(f'x1 = {x1}, y1 = {y1}, x2 = {x2}, y2 = {y2}')
+        print(f'xmin = {xmin}, ymin = {ymin}, xmax = {xmax}, ymax = {ymax}')
+
+        p1, q1 = -deltaX, x1 - xmin
+        p2, q2 = deltaX, xmax - x1
+        p3, q3 = -deltaY, y1 - ymin
+        p4, q4 = deltaY, ymax - y1
+
+        listaP = [p1, p2, p3, p4]
+        listaQ = [q1, q2, q3, q4]
+        #print(f'listaP = {listaP}')
+        #print(f'listaQ = {listaQ}')
+
+        razoes = []
+        if deltaX == 0:
+            if q1 >= 0 and q2 >= 0:
+                item.showing = True
+                r3, r4 = q3/p3, q4/p4
+                razoes.append(r3)
+                razoes.append(r4)
+            else:
+                item.showing = False
+                return
+        else:
+            r1, r2 = q1/p1, q2/p2
+            razoes.append(r1)
+            razoes.append(r2)
+        if deltaY == 0:
+            if q3 >= 0 and q4 >= 0:
+                item.showing = True
+                r1, r2 = q1/p1, q2/p2
+                razoes.append(r1)
+                razoes.append(r2)
+            else:
+                item.showing = False
+                return
+        else:
+            r3, r4 = q3/p3, q4/p4
+            razoes.append(r3)
+            razoes.append(r4)
+
+        #print(f'razoes = {razoes}')
+        positivos, negativos = [1], [0]
+        for ponto, razao in zip(listaP, razoes):
+            if ponto < 0:
+                negativos.append(razao)
+            elif ponto > 0:
+                positivos.append(razao)
+        #print(f'zeta1 = max({negativos}), zeta2 = min({positivos})')
+        zeta1, zeta2 = max(negativos), min(positivos)
+        if zeta1 > zeta2:
+            item.showing = False
+            return
+        if 0 < zeta1 < 1 :
+            item.x1I = x1 + (zeta1 * deltaX)
+            item.y1I = y1 + (zeta1 * deltaY)
+            #print(f'x1I = {item.x1I}, y1I = {item.y1I}')
+            item.clipped = True
+            item.showing = True
+            item.dentroPraFora = True
+        if 0 < zeta2 < 1:
+            item.x2I = x1 + (zeta2 * deltaX)
+            item.y2I = y1 + (zeta2 * deltaY)
+            print(f'x2I = {item.x2I}, y2I = {item.y2I}')
+            item.clipped = True
+            item.showing = True
+            item.foraPraDentro = True
+        if not (0 <= zeta1 <= 1 or 0 <= zeta2 <= 1):
+            item.showing = False
+
+    def weiler_atherton(self, obj:Wireframe):
+        '''for line in obj.lines:
+            self.liang_barsky(line)
+            if line.x1I == self.Window_mundo.x_min:
+                obj.clippingLocation.append('L')
+                obj.clippingOrder.append('F-D')
+            elif line.x1I == self.Window_mundo.x_max:
+                obj.clippingLocation.append('R')
+                obj.clippingOrder.append('F-D')
+
+            if line.x2I == self.Window_mundo.x_min:
+                obj.clippingLocation.append('L')
+                obj.clippingOrder.append('D-F')
+            elif line.x2I == self.Window_mundo.x_max:
+                obj.clippingLocation.append('R')
+                obj.clippingOrder.append('D-F')
+
+            if line.y1I == self.Window_mundo.y_min:
+                obj.clippingLocation.append('B')
+                obj.clippingOrder.append('F-D')
+            elif line.y1I == self.Window_mundo.y_max:
+                obj.clippingLocation.append('T')
+                obj.clippingOrder.append('F-D')
+
+            if line.y2I == self.Window_mundo.y_min:
+                obj.clippingLocation.append('B')
+                obj.clippingOrder.append('D-F')
+            elif line.y2I == self.Window_mundo.y_max:
+                obj.clippingLocation.append('T')
+                obj.clippingOrder.append('D-F')'''
+        
+        for line in obj.lines:
+            x1, y1, x2, y2 = line.line().x1(), line.line().y1(), line.line().x2(), line.line().y2()
+            line.x1I, line.y1I, line.x2I, line.y2I
+            if x1 < self.Window_mundo.x_min and x1 != line.x1I:
+                line.x1I = self.Window_mundo.x_min
+            elif x1 > self.Window_mundo.x_max:
+                line.x1I = self.Window_mundo.x_max
+            
+            if x2 < self.Window_mundo.x_min:
+                line.x2I = self.Window_mundo.x_min
+            elif x2 > self.Window_mundo.x_max:
+                line.x2I = self.Window_mundo.x_max
+            
+            if y1 < self.Window_mundo.y_min:
+                line.y1I = self.Window_mundo.y_min
+            elif x1 > self.Window_mundo.x_max:
+                line.y1I = self.Window_mundo.y_max
+            
+            if y2 < self.Window_mundo.y_min:
+                line.y2I = self.Window_mundo.y_min
+            elif x2 > self.Window_mundo.y_max:
+                line.y2I = self.Window_mundo.y_max
