@@ -2,7 +2,7 @@
 
 ## Trabalho 1.6 - B-Splines utilizando Forward Differences.
 
-Universidade Federal de Santa Catarina. <br />
+Universidade Federal de Santa Catarina.  
 Prof. Aldo Von Wangenheim
 
 ### Alunos:
