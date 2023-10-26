@@ -31,7 +31,7 @@ class DialogBox(QDialog):
         self.layout.addWidget(self.option_label)
 
         self.option_combo = QComboBox()  # Combo box para opcoes
-        self.option_combo.addItems(["Wireframe", "Ponto", "Reta", "Curva"])
+        self.option_combo.addItems(["Wireframe", "Ponto", "Reta", "Curva-Hermite", "Curva-BSpline"])
         self.layout.addWidget(self.option_combo)
 
         self.option_combo.currentIndexChanged.connect(self.option_changed)
@@ -74,7 +74,7 @@ class DialogBox(QDialog):
             self.plus_button = QPushButton("+", self)
             self.fields_layout.addWidget(self.plus_button)
             self.plus_button.clicked.connect(lambda: self.on_plus("wireframe"))
-        elif option == "Curva":
+        elif option == "Curva-Hermite":
             self.curve = QLabel("Número de curvas de continuidade: ")
             self.fields_layout.addWidget(self.curve)
             
@@ -83,7 +83,18 @@ class DialogBox(QDialog):
 
             self.plus_button = QPushButton("+", self)
             self.fields_layout.addWidget(self.plus_button)
-            self.plus_button.clicked.connect(lambda: self.on_plus("curva"))
+            self.plus_button.clicked.connect(lambda: self.on_plus("Curva-Hermite"))
+        elif option == "Curva-BSpline":
+            self.control_points = QLabel("Número de pontos de controle")
+            self.fields_layout.addWidget(self.control_points)
+
+            self.num_control_points = QLineEdit()
+            self.fields_layout.addWidget(self.num_control_points)
+
+            self.plus_button = QPushButton("+", self)
+            self.fields_layout.addWidget(self.plus_button)
+            self.plus_button.clicked.connect(lambda: self.on_plus("Curva-BSpline"))
+
 
     def on_plus(self, type_object):
 
@@ -113,7 +124,7 @@ class DialogBox(QDialog):
                 self.fields_layout.addWidget(self.yInput)
                 self.listX.append(self.xInput)
                 self.listY.append(self.yInput)
-        elif type_object == "curva":
+        elif type_object == "Curva-Hermite":
             self.fields_layout.addWidget(QLabel("Nome:"))
             self.nome = QLineEdit()
             self.fields_layout.addWidget(self.nome)
@@ -139,6 +150,21 @@ class DialogBox(QDialog):
                 self.p4_list.append(self.p4_input)
                 self.r1_list.append(self.r1_input)
                 self.r4_list.append(self.r4_input)
+        
+        elif type_object == "Curva-BSpline":
+            self.fields_layout.addWidget(QLabel("Nome:"))
+            self.nome = QLineEdit()
+            self.fields_layout.addWidget(self.nome)
+
+            self.p_list = []
+            self.n_control_points = int(self.num_control_points.text())
+
+            for i in range(self.n_control_points):
+                self.fields_layout.addWidget(QLabel(f"Control Point {i+1}:  "))
+                self.p_input = QLineEdit()
+                self.fields_layout.addWidget(self.p_input)
+                self.p_list.append(self.p_input)
+                
 
     def clear_fields(self):
         for i in reversed(range(self.fields_layout.count())):
@@ -173,7 +199,7 @@ class DialogBox(QDialog):
                 dic[f'x{i+1}'] = int(self.listX[i].text())
                 dic[f'y{i+1}'] = int(self.listY[i].text())
             return dic
-        elif option == "Curva":
+        elif option == "Curva-Hermite":
             dic = dict()
             dic['opcao'] = option
             dic['nome'] = self.nome.text()
@@ -183,4 +209,13 @@ class DialogBox(QDialog):
                 dic[f'p4{i}'] = (self.p4_list[i].text())
                 dic[f'r1{i}'] = (self.r1_list[i].text())
                 dic[f'r4{i}'] = (self.r4_list[i].text())
+            return dic
+        
+        elif option == "Curva-BSpline":
+            dic = dict()
+            dic['opcao'] = option
+            dic['nome'] = self.nome.text()
+            dic['num_control_points'] = self.n_control_points
+            for i in range(self.n_control_points):
+                dic[f'p{i+1}'] = (self.p_list[i].text())
             return dic

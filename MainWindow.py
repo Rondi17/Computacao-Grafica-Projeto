@@ -4,7 +4,7 @@ from PyQt5.QtWidgets import QMainWindow, QPushButton, QGraphicsView, QGraphicsSc
 from PyQt5.QtCore import Qt, QSize, QPoint, QObject, QPointF, QRectF
 from PyQt5.QtWidgets import *
 from PyQt5.QtGui import *
-from graphicsitem import Ponto, Reta, Wireframe
+from graphicsitem import *
 from window2 import DialogBox
 from window import *
 from descriptor_obj import FileObj
@@ -39,14 +39,17 @@ class MainWindow(QMainWindow):
                                                                   'x2': self.Window_mundo.x_min+100, 'y2': self.Window_mundo.y_max-100,
                                                                   'x3': self.Window_mundo.x_max-100, 'y3': self.Window_mundo.y_max-100,
                                                                   'x4': self.Window_mundo.x_max-100, 'y4': self.Window_mundo.y_min+100}
-        #self.create_new_object(window_limit)
+        self.create_new_object(window_limit)
 
-        # curve = {'opcao': 'Curva', 'nome': 'lal', 'num_curvas': 1, 'p10': '1,1', 'p40': '2,2', 'r10': '3,3', 'r40': '4,4'}
-        curve = {'opcao': 'Curva', 'nome': 'horizontal-curve', 'num_curvas': 3, 'p10': '-1200,0', 'p40': '-400,0', 'r10': '0,50', 'r40': '0,-50', 'p11': '-400,0', 'p41': '400,0', 'r11': '0,50', 'r41': '0,-50', 'p12': '400,0', 'p42': '1200,0', 'r12': '0,50', 'r42': '0,-50'}
-        #self.create_new_object(curve)
-
-        curve_continue = {'opcao': 'Curva', 'nome': 'curva-continuidade4', 'num_curvas': 4, 'p10': '0,200', 'p40': '400,200', 'r10': '100,0', 'r40': '100,0', 'p11': '400,200', 'p41': '600,600', 'r11': '100,0', 'r41': '100,400', 'p12': '600,600', 'p42': '1000,200', 'r12': '100,400', 'r42': '100,0', 'p13': '1000,200', 'p43': '1200,200', 'r13': '100,0', 'r43': '100,0'}
+        curve_continue = {'opcao': 'Curva-Hermite', 'nome': 'curva-continuidade4', 'num_curvas': 4, 'p10': '0,200', 'p40': '400,200', 'r10': '100,0', 'r40': '100,0', 'p11': '400,200', 'p41': '600,600', 'r11': '100,0', 'r41': '100,400', 'p12': '600,600', 'p42': '1000,200', 'r12': '100,400', 'r42': '100,0', 'p13': '1000,200', 'p43': '1200,200', 'r13': '100,0', 'r43': '100,0'}
         #self.create_new_object(curve_continue)
+
+        curve_bspline = {'opcao': 'Curva-BSpline', 'nome': 'my-bspline', 'num_control_points': 4, 'p1': '100,100', 'p2': '200,200', 'p3': '300,200', 'p4': '400,100'}
+        #self.create_new_object(curve_bspline)
+
+        curve_bspline2 = {'opcao': 'Curva-BSpline', 'nome': 'my-bspline', 'num_control_points': 10, 'p1': '0,0', 'p2': '100,100', 'p3': '200,100', 'p4': '300,0','p5': '400,0', 'p6': '500,200', 'p7': '600,200','p8': '700,0', 'p9': '800,0','p10': '900,0',}
+        #self.create_new_object(curve_bspline2)
+
 
     def initUI(self):
         self.wire_cord = []
@@ -688,14 +691,23 @@ class MainWindow(QMainWindow):
             self.display_file.append(new_object)
             self.add_on_display_file(new_object, info['nome'])
             self.objects.append(new_object)
-        elif info["opcao"] == "Curva":
+        elif info["opcao"] == "Curva-Hermite":
             curves = []
-            #info:  {'opcao': 'Curva', 'nome': 'my_curve', 'p1': [100, 100], 'p4': [400, 400], 'r1': [200, 0], 'r4': [0, 200]}
             for i in range((info["num_curvas"])):
                 curve = [info[f'p1{i}'], info[f'p4{i}'], info[f'r1{i}'], info[f'r4{i}']]
                 curves.append(curve)
             lista_de_inteiros = [[tuple(map(int, item.split(','))) for item in sublista] for sublista in curves]
             new_object = HermiteCurve(lista_de_inteiros)
+            self.display_file.append(new_object)
+            self.add_on_display_file(new_object, info['nome'])
+
+        elif info["opcao"] == "Curva-BSpline":
+            control_points = []
+            for i in range(1, info["num_control_points"] + 1):
+                point = info[f'p{i}']
+                converted_point = tuple(map(int, point.split(',')))
+                control_points.append(converted_point)
+            new_object = BSplineCurve(control_points)
             self.display_file.append(new_object)
             self.add_on_display_file(new_object, info['nome'])
         self.scn()
@@ -778,6 +790,18 @@ class MainWindow(QMainWindow):
                     x1,y1,x2,y2 = up_vertices[i][0], up_vertices[i][1], up_vertices[i+1][0], up_vertices[i+1][1]
                     retas.append([x1, y1, x2, y2])
                 obj.curve_clipping = retas
+
+            elif isinstance(obj, BSplineCurve):
+                up_vertices = []
+                for tuple_ in obj.curve_clipping:
+                        vertice = np.array([tuple_[0], tuple_[1], 1])
+                        vertice_up = np.matmul(vertice, combined_matrix) #normalizando
+                        up_vertices.append(vertice_up)
+                retas = []
+                for i in range(len(up_vertices) - 1):
+                    x1,y1,x2,y2 = up_vertices[i][0], up_vertices[i][1], up_vertices[i+1][0], up_vertices[i+1][1]
+                    retas.append([x1, y1, x2, y2])
+                obj.curve_clipping = retas
         self.update_viewport()
 
     def draw_dispplay_file(self, obj):
@@ -807,6 +831,17 @@ class MainWindow(QMainWindow):
             self.onViewport.append(new)
             self.view.show()
         elif type(obj) == HermiteCurve:
+            for line in obj.curve_clipping:
+                new_x1, new_y1 = self.viewport_transformation(line[0], line[1])
+                new_x2, new_y2 = self.viewport_transformation(line[2], line[3])
+                new = Reta(new_x1, new_y1, new_x2, new_y2)
+                if obj.color != None:
+                    new.setPen(obj.color)
+                self.scene.addItem(new)
+                self.onViewport.append(new)
+                self.view.show()
+        elif type(obj) == BSplineCurve:
+            print("BSplineCurve draw << \n")
             for line in obj.curve_clipping:
                 new_x1, new_y1 = self.viewport_transformation(line[0], line[1])
                 new_x2, new_y2 = self.viewport_transformation(line[2], line[3])
@@ -871,6 +906,9 @@ class MainWindow(QMainWindow):
                 self.point_clipping(item)
             elif isinstance(item, HermiteCurve):
                 xmin, ymin, xmax, ymax = self.Window_mundo.x_min +100, self.Window_mundo.y_min+100, self.Window_mundo.x_max - 100, self.Window_mundo.y_max -100
+                item.clipping(xmin, ymin, xmax, ymax)
+            elif isinstance(item, BSplineCurve):
+                xmin, ymin, xmax, ymax = self.Window_mundo.x_min + 100, self.Window_mundo.y_min + 100, self.Window_mundo.x_max - 100, self.Window_mundo.y_max - 100
                 item.clipping(xmin, ymin, xmax, ymax)
 
     def defineIntersection(self, item):

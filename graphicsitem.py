@@ -1,5 +1,6 @@
 from PyQt5.QtWidgets import QGraphicsLineItem, QGraphicsEllipseItem, QGraphicsPolygonItem, QGraphicsItem
 from PyQt5.QtCore import Qt, QPoint
+import numpy as np
 
 #obs: colocar tipo
 class GraphicsItem:
@@ -128,3 +129,91 @@ class HermiteCurve():
             for sub in list:    #sub = [x, y]
                 if (xmin <= sub[0] <= xmax and ymin <= sub[1] <= ymax):
                     self.curve_clipping.append(sub) 
+
+class BSplineCurve():
+    def __init__(self, control_points):
+        self.control_points = control_points
+        self.delta = 0.01
+        self.color = None
+        self.curve_clipping = []    #pontos clipados
+        self.vertices = []
+        self.forward_differences()
+
+    def forward_differences(self):
+        spline_vertices = []
+        iterations = int(1 / self.delta)
+
+        for i in range(0, len(self.control_points)):
+            iterator = i + 4 #4 em 4
+
+            if iterator > len(self.control_points):
+                break
+            points = self.control_points[i:iterator]
+
+            #calcular parametros para cada 4 pontos de controle
+            delta_x, delta_y = self.calculate_bspline_parameters(points)
+            x = delta_x[0]
+            y = delta_y[0]
+            spline_vertices.append((x, y, 0))
+            for _ in range(0, iterations):
+                x += delta_x[1]
+                delta_x[1] += delta_x[2]
+                delta_x[2] += delta_x[3]
+
+                y += delta_y[1]
+                delta_y[1] += delta_y[2]
+                delta_y[2] += delta_y[3]
+
+                spline_vertices.append((x, y, 0))
+        self.vertices = spline_vertices
+    
+    def calculate_bspline_parameters(self, points):
+        #MBS == Matriz b-spline base
+        #GBS == Matriz de geometria de b-spline
+        MBS = self.matrix_bspline_base()
+
+        GBS_x = []
+        GBS_y = []
+        for (x, y) in points:
+            GBS_x.append(x)
+            GBS_y.append(y)
+        
+        GBS_x = np.array([GBS_x]).T
+        coefficients_x = np.matmul(MBS, GBS_x.T[0])
+        initial_conditions_x = self.calculate_initial_conditions(coefficients_x)
+
+        GBS_y = np.array([GBS_y]).T
+        coefficients_y = np.matmul(MBS, GBS_y.T[0])
+        initial_conditions_y = self.calculate_initial_conditions(coefficients_y)
+
+        return initial_conditions_x, initial_conditions_y
+
+    def matrix_bspline_base(self):
+        return np.array(
+        [
+            [-1 / 6, 1 / 2, -1 / 2, 1 / 6],
+            [1 / 2, -1, 1 / 2, 0],
+            [-1 / 2, 0, 1 / 2, 0],
+            [1 / 6, 2 / 3, 1 / 6, 0],
+        ]
+    )
+
+    def calculate_initial_conditions(self, coefficients):
+        a = coefficients[0]
+        b = coefficients[1]
+        c = coefficients[2]
+        d = coefficients[3]
+        delta_2 = self.delta ** 2
+        delta_3 = self.delta ** 3
+        return [
+        d,
+        a * delta_3 + b * delta_2 + c * self.delta,
+        6 * a * delta_3 + 2 * b * delta_2,
+        6 * a * delta_3,
+    ]
+
+    def clipping(self, xmin, ymin, xmax, ymax):
+        self.curve_clipping = []
+        for tuple_ in self.vertices:    #tuple_ = [x, y]
+                if (xmin <= tuple_[0] <= xmax and ymin <= tuple_[1] <= ymax):
+                     self.curve_clipping.append(tuple_)
