@@ -10,6 +10,8 @@ from window import *
 from descriptor_obj import FileObj
 import numpy as np
 import math
+from transformations import Transformation
+from clipping import Clipping
 
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -91,6 +93,13 @@ class MainWindow(QMainWindow):
         object.name = nome
         self.display_fileWidget.addItem(objeto)
         self.display_fileWidget.update()
+
+    def remove_on_display_file(self, name):
+        for i in range(self.display_fileWidget.count()):
+            if self.display_fileWidget.item(i).text() == name:
+                self.display_fileWidget.takeItem(i)
+                self.display_fileWidget.update()
+                break
 
     def create_buttons(self):
         #botao novo objeto
@@ -442,8 +451,7 @@ class MainWindow(QMainWindow):
 
     def rotate_object(self, object, degrees, centerX, centerY):
         self.dialog.accept()
-        final_matrix = self.get_final_rotate_matrix(degrees, centerX, centerY)
-
+        final_matrix = Transformation.get_final_rotate_matrix(Transformation, degrees, centerX, centerY)
         if type(object) == Reta:
             x1, y1, x2, y2 = object.line().x1(), object.line().y1(), object.line().x2(), object.line().y2()
             old_l1 = np.array([x1, y1, 1])
@@ -467,24 +475,13 @@ class MainWindow(QMainWindow):
                 vertice[0] =new_points[0]
                 vertice[1] =new_points[1]
                 #print(f'Points after: x = {x}, y = {y}')
+            object.recriateLines()
             #Atualiza linhas do wireframe com base nos pontos atualizados
             for i in range(len(object.vertices)):
                 x1, y1, x2, y2 = object.vertices[i-1][0], object.vertices[i-1][1], object.vertices[i][0], object.vertices[i][1]
                 object.normalized_vertices.append([x1, y1, x2, y2])
             self.scn()
 
-    def get_final_rotate_matrix(self, degrees, centerX, centerY):
-        translate_toOrigin_matrix = self.get_translate_toOrigin_matrix([centerX, centerY])
-        rotate_matrix = self.get_rotate_matrix(degrees)
-        translate_back = self.get_translate_matrix([centerX, centerY])
-        final_matrix = np.matmul(translate_toOrigin_matrix, rotate_matrix)
-        final_matrix = np.matmul(final_matrix, translate_back)
-        return final_matrix
-
-    def get_rotate_matrix(self, degrees):
-        return np.array([[math.cos(math.radians(degrees)), -(math.sin(math.radians(degrees))), 0],
-                         [math.sin(math.radians(degrees)), math.cos(math.radians(degrees)), 0],
-                         [0, 0, 1]])
 
     @QtCore.pyqtSlot()
     def scale_call(self):
@@ -526,24 +523,22 @@ class MainWindow(QMainWindow):
                 object = item
                 break
         object.calculateCenter() #Calcula centro do objeto
-        translate_toOrigin_matrix = self.get_translate_toOrigin_matrix(object.getCenter())
-        scale_matrix = self.get_scale_matrix(vector)
-        translate_back = self.get_translate_matrix(object.getCenter())
-        final_matrix = np.matmul(translate_toOrigin_matrix, scale_matrix)
-        final_matrix = np.matmul(final_matrix, translate_back)
-
+        final_matrix = Transformation.get_final_scale_matrix(Transformation, object, vector)
+        print(final_matrix)
         if type(object) == Wireframe:
             #Aplica matriz de escala a cada ponto do wireframe
             for vertice in object.vertices:
                 x = vertice[0]
                 y = vertice[1]
-                # print(f'Points before: x = {x}, y = {y}')
+                print(f'Points before: x = {vertice[0]}, y = {vertice[1]}')
                 old_points = np.array([x, y, 1])
+                print(old_points)
                 new_points = np.matmul(old_points, final_matrix)
+                print(new_points)
                 vertice[0] = new_points[0]
                 vertice[1] = new_points[1]
-                # print(f'Points after: x = {x}, y = {y}')
-            
+                print(f'Points after: x = {vertice[0]}, y = {vertice[1]}')
+            object.recriateLines()
             #Atualiza linhas do wireframe com base nos pontos atualizados
             for i in range(len(object.vertices)):
                 x1, y1, x2, y2 = object.vertices[i-1][0], object.vertices[i-1][1], object.vertices[i][0], object.vertices[i][1]
@@ -564,11 +559,6 @@ class MainWindow(QMainWindow):
             object.setLine(x1, y1, x2, y2)
             self.draw_dispplay_file(object)
             self.update_viewport()
-
-    def get_scale_matrix(self, vector):
-        return np.array([[vector[0], 0, 0],
-                                     [0, vector[1], 0],
-                                     [0, 0, 1]])
     
     @QtCore.pyqtSlot()
     def translate_call(self):
@@ -608,7 +598,7 @@ class MainWindow(QMainWindow):
                 object = item
                 break
 
-        translate_matrix = self.get_translate_matrix(vector)
+        translate_matrix = Transformation.get_translate_matrix(vector)
         if type(object) == Wireframe:
             #Aplica matriz de tranlação a cada ponto do wireframe
             for vertice in object.vertices:
@@ -620,7 +610,7 @@ class MainWindow(QMainWindow):
                 vertice[0] = new_points[0]
                 vertice[1] = new_points[1]
                 #print(f'Points after: x = {x}, y = {y}')
-
+            object.recriateLines()
             #Atualiza linhas do wireframe com base nos pontos atualizados
             for i in range(len(object.vertices)):
                 x1, y1, x2, y2 = object.vertices[i-1][0], object.vertices[i-1][1], object.vertices[i][0], object.vertices[i][1]
@@ -649,15 +639,6 @@ class MainWindow(QMainWindow):
             self.draw_dispplay_file(object)
             self.update_viewport()
 
-    def get_translate_matrix(self, vector):
-        return np.array([[1, 0, 0],
-                        [0, 1, 0],
-                        [vector[0], vector[1], 1]])
-    
-    def get_translate_toOrigin_matrix(self, vector):
-        return np.array(([[1, 0, 0],
-                        [0, 1, 0],
-                        [-vector[0], -vector[1], 1]]))
 
     def window_pan_right(self):
         self.window_obj.pan_right()
@@ -719,6 +700,7 @@ class MainWindow(QMainWindow):
             for item in self.display_file:
                 if item.name == 'window_limit':
                     self.display_file.remove(item)
+                    self.remove_on_display_file(item.name)
                     window_limit = {'opcao': 'Wireframe', 'nome': 'window_limit', 'x1': self.Window_mundo.x_min+50, 'y1': self.Window_mundo.y_min+50,
                                                                                     'x2': self.Window_mundo.x_min+50, 'y2': self.Window_mundo.y_max-50,
                                                                                     'x3': self.Window_mundo.x_max-50, 'y3': self.Window_mundo.y_max-50,
@@ -866,11 +848,11 @@ class MainWindow(QMainWindow):
                         #print(f'vertice2_updated = {vertice2_updated}')
                         
                 lista_retas = []
-                print('listas')
+                #print('listas')
                 for i in range(start, len(updated_vertices), step):
                     x1, y1, x2, y2 = updated_vertices[i-1][0], updated_vertices[i-1][1], updated_vertices[i][0], updated_vertices[i][1]
                     lista_retas.append([x1, y1, x2, y2])
-                    print(f'x1 = {x1}, y1 = {y1}, x2 = {x2}, y2 = {y2}')
+                    #print(f'x1 = {x1}, y1 = {y1}, x2 = {x2}, y2 = {y2}')
                 obj.normalized_vertices = lista_retas
 
             elif isinstance(obj, HermiteCurve):
@@ -1020,9 +1002,9 @@ class MainWindow(QMainWindow):
         for item in self.display_file:
             if isinstance(item, Wireframe):
                 for reta in item.lines:
-                    self.defineIntersection(reta)
+                    Clipping.defineIntersection(reta, self.Window_mundo)
             elif isinstance(item, Reta):
-                self.defineIntersection(item)
+                Clipping.defineIntersection(item, self.Window_mundo)
             elif isinstance(item, Ponto):
                 self.point_clipping(item)
             elif isinstance(item, HermiteCurve):
@@ -1032,135 +1014,6 @@ class MainWindow(QMainWindow):
                 xmin, ymin, xmax, ymax = self.Window_mundo.x_min + 100, self.Window_mundo.y_min + 100, self.Window_mundo.x_max - 100, self.Window_mundo.y_max - 100
                 item.clipping(xmin, ymin, xmax, ymax)
 
-    def defineIntersection(self, item):
-        top_left = 9
-        top = 8
-        top_right = 10
-
-        left = 1
-        center = 0
-        right = 2
-
-        bottom_left = 5
-        bottom = 4
-        bottom_right = 6
-
-        if isinstance(item, Reta):
-                x1, y1, x2, y2 = item.line().x1(), item.line().y1(), item.line().x2(), item.line().y2()
-                #print(f'x1 = {x1}, y1 = {y1}, x2 = {x2}, y2 = {y2}')
-                xmin, ymin, xmax, ymax = self.Window_mundo.x_min + 50, self.Window_mundo.y_min + 50, self.Window_mundo.x_max - 50, self.Window_mundo.y_max - 50
-                #print(f'xmin = {xmin}, ymin = {ymin}, xmax = {xmax}, ymax = {ymax}')
-                x, y = x1, y1
-                item.RC = ['', ''] #empty list with strings to be overwritten
-                for _ in range(2):
-                    if _ == 1: 
-                        x, y = x2, y2
-                    if x < xmin: #left
-                        if y < ymin: #bottom
-                            item.RC[_] = bottom_left
-                        elif y > ymax: #top
-                            item.RC[_] = top_left
-                        else: # just left
-                            item.RC[_] = left
-                    
-                    elif x > xmax: #right
-                        if y < ymin: #bottom
-                            item.RC[_] = bottom_right
-                        elif y > ymax: #top
-                            item.RC[_] = top_right
-                        else: # just right
-                            item.RC[_] = right
-                    
-                    else: #middle
-                        if y < ymin: #bottom
-                            item.RC[_] = bottom
-                        elif y > ymax: #top
-                            item.RC[_] = top
-                        else: # center
-                            item.RC[_] = center
-                #print(f'item.RC[0] = {item.RC[0]}, item.RC[1] = {item.RC[1]}')
-                if item.RC[0] == item.RC[1] == 0: #totalmente na janela 
-                    item.clipped = False
-                    item.showing = True
-                elif item.RC[0] != item.RC[1]: #parcialmente visivel:
-                    if item.RC[0] & item.RC[1] == 0:
-                        print(f'x1 = {x1}, y1 = {y1}, x2 = {x2}, y2 = {y2}')
-                        print(f'xmin = {xmin}, ymin = {ymin}, xmax = {xmax}, ymax = {ymax}')
-                        try:
-                            m = (y2 - y1) / (x2 - x1)
-                        except ZeroDivisionError:
-                            m = 0
-                        intersection = item.RC[0] | item.RC[1] # logical OR
-                        intersection = bin(intersection)[2:] # Get binary representation without '0b'
-                        intersection += '0' * (4 - len(intersection)) # complete intersection with zeros on the left until reach 4 bits
-                        #print(f'Variable intersection  = {intersection}')
-
-                        if intersection[3] == '1': #Left intersection
-                            x = xmin
-                            y = m*(xmin - x1) + y1
-                            if ymin < y < ymax:
-                                item.clipped = True
-                                item.showing = True
-                                print(f'left intersection, x = {x}, y = {y}')
-                                if x1 < x2:
-                                    item.x1I = x
-                                    item.y1I = y
-                                else:
-                                    item.x2I = x
-                                    item.y2I = y
-                        if intersection[2] == '1': # Right intersection
-                            x = xmax
-                            y = m*(xmax - x1) + y1
-                            if ymin < y < ymax :
-                                item.clipped = True
-                                item.showing = True
-                                if x1 > x2:
-                                    item.x1I = x
-                                    item.y1I = y
-                                else:
-                                    item.x2I = x
-                                    item.y2I = y
-                                print(f'right intersection, x = {x}, y = {y}')
-                                
-                        
-                        if intersection[0] == '1': # Top intersection
-                            y = ymax
-                            try:
-                                x = x1 + (1/m)*(ymax - y1)
-                                if xmin < x < xmax:
-                                    item.clipped = True
-                                    item.showing = True
-                                    if  y1> y2:
-                                        item.x1I = x
-                                        item.y1I = y
-                                    else: 
-                                        item.x2I = x
-                                        item.y2I = y
-                                    print(f'top intersection, x = {x}, y = {y}')
-                            except ZeroDivisionError:
-                                pass
-
-                        if intersection[1] == '1': #Bottom intersection
-                            y = ymin
-                            try:
-                                x = x1 + (1/m)*(ymin - y1)
-                                if xmin < x < xmax:
-                                    item.clipped = True
-                                    item.showing = True
-                                    if y1 < y2:
-                                        item.x1I = x
-                                        item.y1I = y
-                                    else: 
-                                        item.x2I = x
-                                        item.y2I = y
-                                    print(f'bottom intersection, x = {x}, y = {y}')
-                            except ZeroDivisionError:
-                                pass
-                        
-                elif item.RC[0] & item.RC[1] != 0: #Completamente fora da janela
-                    item.clipped = True
-                    item.showing = False
-                    #print(f'reta not showing')
 
     def exec_liang_barsky(self):
         for item in self.display_file:
@@ -1171,12 +1024,12 @@ class MainWindow(QMainWindow):
             print(f'item = {item.name}')
             if isinstance(item, Wireframe):
                 for reta in item.lines:
-                    self.liang_barsky(reta)
+                    Clipping.liang_barsky(reta, self.Window_mundo)
                     print()
                     print(f'x1I = {reta.x1I}, y1I = {reta.y1I}, x2I = {reta.x2I}, y2I = {reta.y2I}')
                     print(reta.showing)
             elif isinstance(item, Reta):
-                self.liang_barsky(item)
+                Clipping.liang_barsky(item, self.Window_mundo)
             elif isinstance(item, Ponto):
                 self.point_clipping(item)
             elif isinstance(item, HermiteCurve):
@@ -1188,82 +1041,6 @@ class MainWindow(QMainWindow):
             print()
             print()
 
-    def liang_barsky(self, item):
-        item.resetIntersection()
-        x1, y1, x2, y2 = item.line().x1(), item.line().y1(), item.line().x2(), item.line().y2()
-        xmin, ymin, xmax, ymax = self.Window_mundo.x_min + 50, self.Window_mundo.y_min + 50, self.Window_mundo.x_max - 50, self.Window_mundo.y_max - 50
-        deltaX = x2 - x1
-        deltaY = y2 - y1
-
-        print(f'x1 = {x1}, y1 = {y1}, x2 = {x2}, y2 = {y2}')
-        print(f'xmin = {xmin}, ymin = {ymin}, xmax = {xmax}, ymax = {ymax}')
-
-        p1, q1 = -deltaX, x1 - xmin
-        p2, q2 = deltaX, xmax - x1
-        p3, q3 = -deltaY, y1 - ymin
-        p4, q4 = deltaY, ymax - y1
-
-        listaP = [p1, p2, p3, p4]
-        listaQ = [q1, q2, q3, q4]
-        #print(f'listaP = {listaP}')
-        #print(f'listaQ = {listaQ}')
-
-        razoes = []
-        if deltaX == 0:
-            if q1 >= 0 and q2 >= 0:
-                item.showing = True
-                r3, r4 = q3/p3, q4/p4
-                razoes.append(r3)
-                razoes.append(r4)
-            else:
-                item.showing = False
-                return
-        else:
-            r1, r2 = q1/p1, q2/p2
-            razoes.append(r1)
-            razoes.append(r2)
-        if deltaY == 0:
-            if q3 >= 0 and q4 >= 0:
-                item.showing = True
-                r1, r2 = q1/p1, q2/p2
-                razoes.append(r1)
-                razoes.append(r2)
-            else:
-                item.showing = False
-                return
-        else:
-            r3, r4 = q3/p3, q4/p4
-            razoes.append(r3)
-            razoes.append(r4)
-
-        #print(f'razoes = {razoes}')
-        positivos, negativos = [1], [0]
-        for ponto, razao in zip(listaP, razoes):
-            if ponto < 0:
-                negativos.append(razao)
-            elif ponto > 0:
-                positivos.append(razao)
-        #print(f'zeta1 = max({negativos}), zeta2 = min({positivos})')
-        zeta1, zeta2 = max(negativos), min(positivos)
-        if zeta1 > zeta2:
-            item.showing = False
-            return
-        if 0 < zeta1 < 1 :
-            item.x1I = x1 + (zeta1 * deltaX)
-            item.y1I = y1 + (zeta1 * deltaY)
-            #print(f'x1I = {item.x1I}, y1I = {item.y1I}')
-            item.clipped = True
-            item.showing = True
-            item.dentroPraFora = True
-        if 0 < zeta2 < 1:
-            item.x2I = x1 + (zeta2 * deltaX)
-            item.y2I = y1 + (zeta2 * deltaY)
-            print(f'x2I = {item.x2I}, y2I = {item.y2I}')
-            item.clipped = True
-            item.showing = True
-            item.foraPraDentro = True
-        if not (0 <= zeta1 <= 1 or 0 <= zeta2 <= 1):
-            item.showing = False
 
     def weiler_atherton(self, obj:Wireframe):
         '''for line in obj.lines:

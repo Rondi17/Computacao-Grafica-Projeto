@@ -1,5 +1,5 @@
 from PyQt5.QtWidgets import QGraphicsLineItem, QGraphicsEllipseItem, QGraphicsPolygonItem, QGraphicsItem
-from PyQt5.QtCore import Qt, QPoint
+from PyQt5.QtCore import Qt, QPointF
 import numpy as np
 
 #obs: colocar tipo
@@ -105,6 +105,13 @@ class Wireframe():
 
     def getCenterY(self):
         return self.centerY
+    
+    def recriateLines(self):
+        self.lines = []
+        for i in range(len(self.vertices)):
+            x1, y1, x2, y2 = self.vertices[i-1][0], self.vertices[i-1][1], self.vertices[i][0], self.vertices[i][1]
+            #print(f' 1- {x1}, y1 = {y1}, x2 = {x2}, y2 = {y2}')
+            self.lines.append(Reta(x1, y1, x2, y2))
 
 class HermiteCurve():
     def __init__(self, curves:list):
@@ -236,6 +243,17 @@ class BSplineCurve():
         for tuple_ in self.vertices:    #tuple_ = [x, y]
                 if (xmin <= tuple_[0] <= xmax and ymin <= tuple_[1] <= ymax):
                      self.curve_clipping.append(tuple_)
+
+
+class Point3D():
+    def __init__(self, x, y, z = 0) -> None:
+        self.x = x
+        self.y = y
+        self.z = z
+
+    def transform_toQPointF(self) -> QPointF:
+        return QPointF(self.x, self.y)
+    
 
 
         
