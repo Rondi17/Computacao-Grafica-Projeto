@@ -4,9 +4,14 @@ import numpy as np
 
 #obs: colocar tipo
 class GraphicsItem:
-    def __init__(self, x, y):
-        self.x = x
-        self.y = y
+    def __init__(self, name: str, vertices: list):
+        self.name = name
+        self.vertices = vertices
+        self.centerX = 0.0
+        self.centerY = 0.0
+
+    def getCenter(self):
+        return [self.centerX, self.centerY]
 
 
 class Ponto(QGraphicsEllipseItem):
