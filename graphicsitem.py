@@ -245,15 +245,31 @@ class BSplineCurve():
                      self.curve_clipping.append(tuple_)
 
 
-class Point3D():
-    def __init__(self, x, y, z = 0) -> None:
-        self.x = x
-        self.y = y
-        self.z = z
+class Point3D(GraphicsItem):
+    def __init__(self, name: str, vertices: list):
+        super().__init__(name, vertices)
+        self.clipped_point = [] #lista de pontos que aparecem depois da projecao
+        self.normalized_point = []
 
     def transform_toQPointF(self) -> QPointF:
-        return QPointF(self.x, self.y)
+        return None
+        #return QPointF(self.x, self.y)
+
+    def clipping(self, xmin, ymin, xmax, ymax):
+        if (xmin <= self.vertices[0] <= xmax and ymin <= self.vertices[1] <= ymax):
+            self.clipped_point = self.vertices
+        print("pontos clipados ")
+
+    def calculateCenter(self):
+        #o centro de um ponto é o propio ponto
+        x = self.vertices[0]
+        y = self.vertices[1]
+        z = self.vertices[2]
+        return [x, y, z]
     
-
-
-        
+    def translate(self, translate_matrix):
+        old_vertice = np.array([self.vertices[0], self.vertices[1], self.vertices[2]])
+        new_vertice = np.matmul(old_vertice, translate_matrix)
+        self.vertices[0] = new_vertice[0]
+        self.vertices[1] = new_vertice[1]
+        self.vertices[2] = new_vertice[2]

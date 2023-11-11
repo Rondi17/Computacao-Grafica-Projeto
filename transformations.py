@@ -46,7 +46,7 @@ class Transformation():
         return final_matrix
     
 
-class Transformation_3D():
+class Transformation3D():
     #--------------------------------- Translate ---------------------------------
 
     def get_translate_matrix(vector):

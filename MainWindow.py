@@ -10,7 +10,7 @@ from window import *
 from descriptor_obj import FileObj
 import numpy as np
 import math
-from transformations import Transformation
+from transformations import *
 from clipping import Clipping
 
 class MainWindow(QMainWindow):
@@ -66,7 +66,7 @@ class MainWindow(QMainWindow):
         #Fator utilizado para pan na viewport
         self.panFactor = 40.0
         self.open_save = FileObj()
-        
+        self.transformations = Transformation3D()
         self.setWindowTitle(self.title)
         self.setGeometry(self.left, self.top, self.width, self.height)
         self.create_viewport()
@@ -253,10 +253,10 @@ class MainWindow(QMainWindow):
             context=QtCore.Qt.WidgetShortcut,
             activated=self.window_pan_down,
         )
-        #Botão rotate window right
-        botaoTranslate = QPushButton('rotate right', self)
+        #Botão rotate window X
+        botaoTranslate = QPushButton('X', self)
         botaoTranslate.move(10, 420)
-        botaoTranslate.resize(90, 30)
+        botaoTranslate.resize(30, 30)
         botaoTranslate.clicked.connect(self.rotate_window_right)
         QtWidgets.QShortcut(
             #QtGui.QKeySequence(QtGui.QKeySequence('rw')),
@@ -264,10 +264,11 @@ class MainWindow(QMainWindow):
             context=QtCore.Qt.WidgetShortcut,
             activated=self.rotate_window_right,
         )
-        #Botão rotate window right
-        botaoTranslate = QPushButton('rotate left', self)
-        botaoTranslate.move(110, 420)
-        botaoTranslate.resize(90, 30)
+
+        #Botão rotate window Y
+        botaoTranslate = QPushButton('Y', self)
+        botaoTranslate.move(50, 420)
+        botaoTranslate.resize(30, 30)
         botaoTranslate.clicked.connect(self.rotate_window_left)
         QtWidgets.QShortcut(
             #QtGui.QKeySequence(QtGui.QKeySequence('rw')),
@@ -275,6 +276,19 @@ class MainWindow(QMainWindow):
             context=QtCore.Qt.WidgetShortcut,
             activated=self.rotate_window_left,
         )
+
+        #Botao para rotacionar em Z
+        botaoTranslate = QPushButton('Z', self)
+        botaoTranslate.move(90, 420)
+        botaoTranslate.resize(30, 30)
+        botaoTranslate.clicked.connect(self.rotate_window_right)
+        QtWidgets.QShortcut(
+            #QtGui.QKeySequence(QtGui.QKeySequence('rw')),
+            self.view,
+            context=QtCore.Qt.WidgetShortcut,
+            activated=self.rotate_window_right,
+        )
+
         label_degrees = QLabel("Graus: ", self)
         label_degrees.move(20, 450)
         self.input_graus = QLineEdit(self)
@@ -383,7 +397,8 @@ class MainWindow(QMainWindow):
         self.layout.addWidget(self.option_combo)
 
         self.center_combo = QComboBox()
-        self.center_combo.addItems(['Centro do mundo', 'Centro do objeto', 'Ponto especifico'])
+        #self.center_combo.addItems(['Centro do mundo', 'Centro do objeto', 'Ponto especifico'])
+        self.center_combo.addItems(['Rotation x', 'Rotation y', 'Rotation z', 'Arbitrary Rotation'])
         self.layout.addWidget(self.center_combo)
         self.center_combo.currentIndexChanged.connect(self.option_changed)
 
@@ -405,6 +420,14 @@ class MainWindow(QMainWindow):
             self.rotate_object(object, float(self.degreesInput.text()), centerX, centerY)
         elif option == 'Centro do mundo':
             self.rotate_object(object, float(self.degreesInput.text()), 0, 0)
+        elif option == "Rotation x":
+            pass
+        elif option == "Rotation y":
+            pass
+        elif option == "Rotation z":
+            pass
+        elif option == "Arbitrary Rotation":
+            pass
         else:
             object.centerX = 0
             object.centerY = 0
@@ -481,6 +504,8 @@ class MainWindow(QMainWindow):
                 x1, y1, x2, y2 = object.vertices[i-1][0], object.vertices[i-1][1], object.vertices[i][0], object.vertices[i][1]
                 object.normalized_vertices.append([x1, y1, x2, y2])
             self.scn()
+        elif type(object) == Point3D:
+            pass
 
 
     @QtCore.pyqtSlot()
@@ -500,6 +525,11 @@ class MainWindow(QMainWindow):
         layout.addWidget(yLabel)
         yInput = QLineEdit()
         layout.addWidget(yInput)
+
+        zLabel = QLabel('z:')
+        layout.addWidget(zLabel)
+        zInput = QLineEdit()
+        layout.addWidget(zInput)
 
         scaleLabel = QLabel('Selecione qual objeto dimensionar:')
         layout.addWidget(scaleLabel)
@@ -559,6 +589,15 @@ class MainWindow(QMainWindow):
             object.setLine(x1, y1, x2, y2)
             self.draw_dispplay_file(object)
             self.update_viewport()
+
+        elif type(object) == Point3D:
+            #print("vertices antes: ", object.vertices)
+            old_vertice = np.array([object.vertices[0], object.vertices[1], object.vertices[2]])
+            new_vertice = np.matmul(old_vertice, final_matrix)
+            object.vertices[0] = new_vertice[0]
+            object.vertices[1] = new_vertice[1]
+            object.vertices[2] = new_vertice[2]
+            #print("vertices antes: ", object.vertices)
     
     @QtCore.pyqtSlot()
     def translate_call(self):
@@ -576,6 +615,11 @@ class MainWindow(QMainWindow):
         layout.addWidget(yLabel)
         yInput = QLineEdit()
         layout.addWidget(yInput)
+
+        zLabel = QLabel('z:')
+        layout.addWidget(zLabel)
+        zInput = QLineEdit()
+        layout.addWidget(zInput)
 
         translateLabel = QLabel('Selecione qual objeto transladar:')
         layout.addWidget(translateLabel)
@@ -630,6 +674,11 @@ class MainWindow(QMainWindow):
             object.setLine(x1, y1, x2, y2)
             self.draw_dispplay_file(object)
             self.update_viewport()
+        elif type(object) == Point3D:
+            #print("ANTES: ", object.vertices)
+            translate_matrix = self.transformations.get_translate_matrix(vector)
+            object.translate(translate_matrix)
+            #print("DEPOIS: ", object.vertices)
         else:
             x, y = object.x(), object.y()
             old_points = np.array([x, y, 1])
@@ -644,7 +693,6 @@ class MainWindow(QMainWindow):
         self.window_obj.pan_right()
         self.update_window_limit('pan_right')
         self.scn()
-        #self.update_viewport() isso quem chama é ... 
 
     def window_pan_left(self):
         self.window_obj.pan_left()
@@ -757,7 +805,11 @@ class MainWindow(QMainWindow):
             new_object = BSplineCurve(control_points)
             self.display_file.append(new_object)
             self.add_on_display_file(new_object, info['nome'])
-        
+        elif info['opcao'] == "Point3D":
+            vertices = [info['x'], info['y'], info['z']]
+            new_object = Point3D(info["nome"], vertices)
+            self.display_file.append(new_object)
+            self.add_on_display_file(new_object, info['nome'])
 
     def set_window_default_paramaters(self):
         #window dimensions
@@ -819,7 +871,7 @@ class MainWindow(QMainWindow):
 
     def scn(self, degrees=0):
         combined = self.window_obj.scn(self.Window_mundo.getCenterX(), self.Window_mundo.getCenterY())  #retorna a matriz composta
-        print(f'--------------------\n xmin = {self.Window_mundo.getXmin()}, ymin = {self.Window_mundo.getYmin()}, xmax = {self.Window_mundo.getXmax()}, ymax = {self.Window_mundo.getYmax()}\n x = {self.Window_mundo.getCenterX()}, y = {self.Window_mundo.getCenterY()}\n --------------------')
+        #print(f'--------------------\n xmin = {self.Window_mundo.getXmin()}, ymin = {self.Window_mundo.getYmin()}, xmax = {self.Window_mundo.getXmax()}, ymax = {self.Window_mundo.getYmax()}\n x = {self.Window_mundo.getCenterX()}, y = {self.Window_mundo.getCenterY()}\n --------------------')
         #print('call update_normalized_coordinates')
         self.update_normalized_coordinates(combined)
 
@@ -878,6 +930,11 @@ class MainWindow(QMainWindow):
                     x1,y1,x2,y2 = up_vertices[i][0], up_vertices[i][1], up_vertices[i+1][0], up_vertices[i+1][1]
                     retas.append([x1, y1, x2, y2])
                 obj.curve_clipping = retas
+            elif isinstance(obj, Point3D):
+                if(obj.clipped_point != []):
+                    vertice = np.array([obj.clipped_point[0], obj.clipped_point[1], 1])
+                    vertice_up = np.matmul(vertice, combined_matrix)
+                    obj.normalized_point = vertice_up
         self.update_viewport()
 
     def draw_dispplay_file(self, obj):
@@ -953,6 +1010,15 @@ class MainWindow(QMainWindow):
                 self.scene.addItem(new)
                 self.onViewport.append(new)
                 self.view.show()
+        elif type(obj) == Point3D:
+            print(">>>>> Desenhando ponto 3D <<<<<")
+            print("normalized point ", obj.normalized_point)
+            if(obj.normalized_point != []):
+                x, y = self.viewport_transformation(obj.normalized_point[0], obj.normalized_point[1])
+                new = Ponto(x, y)
+                self.scene.addItem(new)
+                self.onViewport.append(new)
+                self.view.show()
     
     def get_degrees(self):
         degrees_text = self.input_graus.text()
@@ -1013,7 +1079,9 @@ class MainWindow(QMainWindow):
             elif isinstance(item, BSplineCurve):
                 xmin, ymin, xmax, ymax = self.Window_mundo.x_min + 100, self.Window_mundo.y_min + 100, self.Window_mundo.x_max - 100, self.Window_mundo.y_max - 100
                 item.clipping(xmin, ymin, xmax, ymax)
-
+            elif isinstance(item, Point3D):
+                xmin, ymin, xmax, ymax = self.Window_mundo.x_min + 100, self.Window_mundo.y_min + 100, self.Window_mundo.x_max - 100, self.Window_mundo.y_max - 100
+                item.clipping(xmin, ymin, xmax, ymax)
 
     def exec_liang_barsky(self):
         for item in self.display_file:

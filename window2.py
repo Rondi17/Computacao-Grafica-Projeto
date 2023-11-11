@@ -31,7 +31,7 @@ class DialogBox(QDialog):
         self.layout.addWidget(self.option_label)
 
         self.option_combo = QComboBox()  # Combo box para opcoes
-        self.option_combo.addItems(["Wireframe", "Ponto", "Reta", "Curva-Hermite", "Curva-BSpline"])
+        self.option_combo.addItems(["Wireframe", "Ponto", "Reta", "Curva-Hermite", "Curva-BSpline", "Point3D"])
         self.layout.addWidget(self.option_combo)
 
         self.option_combo.currentIndexChanged.connect(self.option_changed)
@@ -94,7 +94,17 @@ class DialogBox(QDialog):
             self.plus_button = QPushButton("+", self)
             self.fields_layout.addWidget(self.plus_button)
             self.plus_button.clicked.connect(lambda: self.on_plus("Curva-BSpline"))
-
+        elif option == "Point3D":
+            self.fields_layout.addWidget(QLabel("Name:"))
+            self.nome = QLineEdit()
+            self.fields_layout.addWidget(self.nome)
+            self.fields_layout.addWidget(QLabel("Digite x,y,z:"))
+            self.x_input = QLineEdit()
+            self.y_input = QLineEdit()
+            self.z_input = QLineEdit()
+            self.fields_layout.addWidget(self.x_input)
+            self.fields_layout.addWidget(self.y_input)
+            self.fields_layout.addWidget(self.z_input)
 
     def on_plus(self, type_object):
 
@@ -219,3 +229,11 @@ class DialogBox(QDialog):
             for i in range(self.n_control_points):
                 dic[f'p{i+1}'] = (self.p_list[i].text())
             return dic
+        if option == "Point3D":
+            return {
+                "opcao": option,
+                "nome": self.nome.text(),
+                "x": int(self.x_input.text()),
+                "y": int(self.y_input.text()),
+                "z": int(self.z_input.text())
+            }
