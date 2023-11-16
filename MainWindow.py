@@ -810,6 +810,15 @@ class MainWindow(QMainWindow):
             new_object = Point3D(info["nome"], vertices)
             self.display_file.append(new_object)
             self.add_on_display_file(new_object, info['nome'])
+        elif info['opcao']  == "BezierSurface":
+            control_points_str = []
+            for i in range(16):
+                point = info[f'p{i}']
+                control_points_str.append(point)
+            control_points_float = [tuple(map(float, point.split(','))) for point in control_points_str]
+            new_object = BezierSurface(control_points_float)
+            self.display_file.append(new_object)
+            self.add_on_display_file(new_object, info['nome'])
 
     def set_window_default_paramaters(self):
         #window dimensions
@@ -935,6 +944,14 @@ class MainWindow(QMainWindow):
                     vertice = np.array([obj.clipped_point[0], obj.clipped_point[1], 1])
                     vertice_up = np.matmul(vertice, combined_matrix)
                     obj.normalized_point = vertice_up
+            elif isinstance(obj, BezierSurface):
+                up_vertices = []
+                for tuple_ in obj.surface_points:
+                        vertice = np.array([tuple_[0], tuple_[1], 1])
+                        vertice_up = np.matmul(vertice, combined_matrix) #normalizando
+                        up_vertices.append(vertice_up)
+                obj.surface_normalized_points = up_vertices
+                obj.organize()
         self.update_viewport()
 
     def draw_dispplay_file(self, obj):
@@ -1019,6 +1036,29 @@ class MainWindow(QMainWindow):
                 self.scene.addItem(new)
                 self.onViewport.append(new)
                 self.view.show()
+        elif type(obj) == BezierSurface:
+            print("Surface draw \n")
+            for lista in obj.pontos_agrupados_x_f:
+                for line in lista:
+                    new_x1, new_y1 = self.viewport_transformation(line[0], line[1], obj.name)
+                    new_x2, new_y2 = self.viewport_transformation(line[2], line[3], obj.name)
+                    new = Reta(new_x1, new_y1, new_x2, new_y2)
+                    if obj.color != None:
+                        new.setPen(obj.color)
+                    self.scene.addItem(new)
+                    self.onViewport.append(new)
+                    self.view.show()
+            
+            for lista in obj.pontos_agrupados_y_f:
+                for line in lista:
+                    new_x1, new_y1 = self.viewport_transformation(line[0], line[1], obj.name)
+                    new_x2, new_y2 = self.viewport_transformation(line[2], line[3], obj.name)
+                    new = Reta(new_x1, new_y1, new_x2, new_y2)
+                    if obj.color != None:
+                        new.setPen(obj.color)
+                    self.scene.addItem(new)
+                    self.onViewport.append(new)
+                    self.view.show()
     
     def get_degrees(self):
         degrees_text = self.input_graus.text()

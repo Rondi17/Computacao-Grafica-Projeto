@@ -1,6 +1,7 @@
 from PyQt5.QtWidgets import QGraphicsLineItem, QGraphicsEllipseItem, QGraphicsPolygonItem, QGraphicsItem
 from PyQt5.QtCore import Qt, QPointF
 import numpy as np
+from functools import reduce
 
 #obs: colocar tipo
 class GraphicsItem:
@@ -278,3 +279,107 @@ class Point3D(GraphicsItem):
         self.vertices[0] = new_vertice[0]
         self.vertices[1] = new_vertice[1]
         self.vertices[2] = new_vertice[2]
+
+class BezierSurface():
+    def __init__(self, control_points):
+        self.control_points = control_points
+        self.step = 10
+        self.color = None
+        self.matrixS = []
+        self.matrixT = []
+        self.matrixM = []
+        self.matrixG_X = [] #matriz de geometria
+        self.matrixG_Y = []
+        self.matrixG_Z = []
+        self.surface_points = []
+        self.surface_points_x = []
+        self.surface_points_y = []
+        self.surface_clipping = []
+        self.surface_normalized_points = []
+        self.pontos_agrupados_x_f = []
+        self.pontos_agrupados_y_f = []
+        self.initialize_arrays() 
+
+    def initialize_arrays(self):
+        self.create_matrix_M()
+        self.create_matrix_G()
+        self.calculate_surface_points()
+
+    #cria a matriz de geometria com os 16 pontos de controle
+    def create_matrix_G(self):
+        matrix_x = [tupla[0] for tupla in self.control_points]
+        matrix_y = [tupla[1] for tupla in self.control_points]
+        matrix_z = [tupla[2] for tupla in self.control_points]
+        num_colunas = 4
+        self.matrixG_X = [matrix_x[i:i+num_colunas] for i in range(0, len(matrix_x), num_colunas)]
+        self.matrixG_Y = [matrix_y[i:i+num_colunas] for i in range(0, len(matrix_y), num_colunas)]
+        self.matrixG_Z = [matrix_z[i:i+num_colunas] for i in range(0, len(matrix_z), num_colunas)]
+
+    #cria a matriz dos parametros S e T
+    def create_matrix_ST(self, n):
+        return np.array([n ** 3, n ** 2, n, 1])
+    
+    #criar matriz M (matriz de bezier)
+    def create_matrix_M(self):
+        self.matrixM = np.array(
+        [
+            [-1, 3, -3, 1],
+            [3, -6, 3, 0],
+            [-3, 3, 0, 0],
+            [1, 0, 0, 0],
+        ]
+    )
+
+    def calculate_surface_points(self):
+        for s in np.linspace(0, 1, num=int(self.step)):
+            for t in np.linspace(0, 1, num=int(self.step)):
+                s_parameters = self.create_matrix_ST(s)
+                t_parameters = self.create_matrix_ST(t)
+
+                x_new = reduce(np.dot,[s_parameters, self.matrixM, self.matrixG_X, self.matrixM.T, t_parameters.T])
+                y_new = reduce(np.dot,[s_parameters, self.matrixM, self.matrixG_Y, self.matrixM.T, t_parameters.T])
+                z_new = reduce(np.dot,[s_parameters, self.matrixM, self.matrixG_Z, self.matrixM.T, t_parameters.T])
+
+                point = (x_new, y_new, z_new)
+                self.surface_points.append(point)
+
+    #organizar os vetores em x e y para criar as retas que ligam os pontos
+    def organize(self):
+        x_valores = [point[0] for point in self.surface_normalized_points]
+        y_valores = [point[1] for point in self.surface_normalized_points]
+
+        lista_de_listas_x = self.group_by_proximity(x_valores)
+        lista_de_listas_y = self.group_by_proximity(y_valores)
+
+        pontos_agrupados_x = [[ponto for ponto in self.surface_normalized_points if ponto[0] in grupo] for grupo in lista_de_listas_x]
+        pontos_agrupados_y = [[ponto for ponto in self.surface_normalized_points if ponto[1] in grupo] for grupo in lista_de_listas_y]
+
+        for sublist in pontos_agrupados_x:
+            retas = []
+            for i in range(len(sublist) - 1):
+                x1,y1,x2,y2 = sublist[i][0], sublist[i][1], sublist[i+1][0], sublist[i+1][1]
+                retas.append([x1, y1, x2, y2])
+            self.pontos_agrupados_x_f.append(retas)
+        
+        for sublist in pontos_agrupados_y:
+            retas = []
+            for i in range(len(sublist) - 1):
+                x1,y1,x2,y2 = sublist[i][0], sublist[i][1], sublist[i+1][0], sublist[i+1][1]
+                retas.append([x1, y1, x2, y2])
+            self.pontos_agrupados_y_f.append(retas)
+
+    def group_by_proximity(self, value):
+        agrupados = []
+        atual_grupo = []
+
+        for valor in sorted(value):
+            if atual_grupo and valor - atual_grupo[-1] > 5:
+                agrupados.append(atual_grupo)
+                atual_grupo = [valor]
+            else:
+                atual_grupo.append(valor)
+
+        if atual_grupo:
+            agrupados.append(atual_grupo)
+
+        return agrupados
